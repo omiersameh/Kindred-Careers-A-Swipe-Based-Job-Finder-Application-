@@ -1,0 +1,18 @@
+fastapi>=0.115.0
+uvicorn>=0.30.0
+pydantic>=2.9.0
+openai>=1.50.0
+python-dotenv>=1.0.1
+
+# Phase 3: RAG Pipeline
+sentence-transformers>=3.0.0
+chromadb>=0.5.0
+google-generativeai>=0.8.0
+crawl4ai>=0.4.0
+apscheduler>=3.10.0
+requests>=2.32.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+tf-keras  # Required for sentence-transformers compatibility with Keras 3
+einops    # Required for Nomic embedding model architecture
+
