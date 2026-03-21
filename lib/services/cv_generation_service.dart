@@ -28,7 +28,7 @@ class CVGenerationService {
 
   // 🔴 2. SET YOUR BACKEND OR LLM API URL HERE
   static const String _apiUrl =
-      'http://10.0.2.2:8000/api/generate-cv'; // Example for OpenAI
+      'http://192.168.100.12:8000/api/generate-cv'; // Replaced 10.0.2.2 proxy with PC IPv4
 
   // 🔴 3. CHANGE TO TRUE TO USE THE REAL API
   static const bool _useRealAPI = true;

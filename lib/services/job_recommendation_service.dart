@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/job.dart';
 import '../models/user_profile.dart';
 import '../models/swipe_action.dart';
@@ -13,13 +15,16 @@ import '../models/swipe_action.dart';
 // ============================================================
 
 class JobRecommendationService {
+  static const String _baseUrl = 'http://192.168.100.12:8000'; // PC's actual IP
   static const int _bufferMinSize = 30;
+  static const int _fetchCount = 40;
 
   final List<Job> _buffer = [];
   final List<SwipeAction> _swipeHistory = [];
   final Set<String> _seenIds = {}; // All jobs shown to user (left + right)
 
   bool _isFetching = false;
+  bool _ingestTriggered = false;
   bool _feedExhausted = false; // True when backend says "no more new jobs"
 
   // ─── Public API ────────────────────────────────────────────
@@ -49,6 +54,7 @@ class JobRecommendationService {
     _swipeHistory.clear();
     _buffer.clear();
     _seenIds.clear();
+    _ingestTriggered = false;
     _feedExhausted = false;
   }
 
@@ -57,8 +63,23 @@ class JobRecommendationService {
 
   /// Manually trigger a personalized ingest using the user's profile.
   Future<void> triggerIngest(UserProfile profile) async {
-    // offline mock
-    print('✅ Fallback: Mock ingest triggered for offline mode.');
+    try {
+      print('✨ Triggering personalized ingest for: ${profile.name}');
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/jobs/ingest'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'user_profile': profile.toJson()}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        print('✅ Personalized ingest started. Backend scraping with your profile.');
+        _ingestTriggered = true;
+      }
+    } catch (e) {
+      print('⚠️ Could not trigger ingest: $e');
+    }
   }
 
   // ─── Internal ──────────────────────────────────────────────
@@ -69,75 +90,52 @@ class JobRecommendationService {
     return _buffer.where((j) => !swipedIds.contains(j.id)).toList();
   }
 
-  /// Fetches jobs from local mock data instead of python API.
+  /// Fetches jobs from /api/jobs/feed with exclude_ids to prevent duplicates.
   Future<void> _refetch(UserProfile profile) async {
     if (_isFetching || _feedExhausted) return;
     if (_buffer.length >= _bufferMinSize) return;
 
     _isFetching = true;
     try {
-      await Future.delayed(const Duration(milliseconds: 500)); // simulate network
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/jobs/feed'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'user_profile': profile.toJson(),
+              'n': _fetchCount,
+              'exclude_ids': _seenIds.toList(), // Never show already-seen jobs
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
 
-      final mockJobs = [
-        Job(
-          id: 'job_${DateTime.now().millisecondsSinceEpoch}_1',
-          title: 'Senior Flutter Developer',
-          company: 'TechCorp',
-          location: 'Remote',
-          // salary: '\$90,000 - \$120,000',
-          jobType: 'Full-time',
-          description: 'Looking for an experienced Flutter engineer...',
-          requiredSkills: ['Flutter', 'Dart', 'Firebase'],
-          industry: 'Technology',
-          matchScore: 0.95,
-          vibeTag: '🚀 High Growth',
-          summaryBullets: ['Lead mobile app team', 'Migrate legacy apps to Flutter'],
-        ),
-        Job(
-          id: 'job_${DateTime.now().millisecondsSinceEpoch}_2',
-          title: 'Digital Marketing Manager',
-          company: 'Growth.io',
-          location: 'Hybrid',
-          // salary: '\$70,000 - \$95,000',
-          jobType: 'Full-time',
-          description: 'Drive growth and user acquisition...',
-          requiredSkills: ['SEO', 'Content Strategy', 'Google Analytics'],
-          industry: 'Marketing',
-          matchScore: 0.88,
-          vibeTag: '📈 Impact',
-          summaryBullets: ['Manage \$1M ad spend', 'Run A/B tests'],
-        ),
-        Job(
-          id: 'job_${DateTime.now().millisecondsSinceEpoch}_3',
-          title: 'Product Designer',
-          company: 'DesignWorks',
-          location: 'On-site',
-          // salary: '\$85,000 - \$110,000',
-          jobType: 'Full-time',
-          description: 'Create beautiful user experiences...',
-          requiredSkills: ['Figma', 'UI/UX', 'Prototyping'],
-          industry: 'Design',
-          matchScore: 0.70,
-        ),
-      ];
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final newJobs = data.map((j) => Job.fromJson(j)).toList();
+        final existingIds = _buffer.map((j) => j.id).toSet();
+        int added = 0;
+        for (final job in newJobs) {
+          if (!existingIds.contains(job.id) && !_seenIds.contains(job.id)) {
+            _buffer.add(job);
+            added++;
+          }
+        }
+        print('✅ Fetched $added new jobs. Buffer: ${_buffer.length}');
+      } else if (response.statusCode == 503) {
+        final body = jsonDecode(response.body);
+        final detail = (body['detail'] ?? '').toString();
 
-      final existingIds = _buffer.map((j) => j.id).toSet();
-      int added = 0;
-      for (final job in mockJobs) {
-        if (!existingIds.contains(job.id) && !_seenIds.contains(job.id)) {
-          _buffer.add(job);
-          added++;
+        if (detail.contains('empty')) {
+          if (!_ingestTriggered) {
+             print('⚠️ DB empty. Auto-triggering personalized scrape...');
+             await triggerIngest(profile);
+          }
+        } else {
+          _feedExhausted = true;
         }
       }
-      
-      print('✅ Mock fetched $added new jobs. Buffer: ${_buffer.length}');
-      
-      if (added == 0) {
-         _feedExhausted = true;
-         print('ℹ️  Mock Feed exhausted.');
-      }
     } catch (e) {
-      print('⚠️ Mock generation error: $e');
+      print('⚠️ Backend unreachable: $e');
     } finally {
       _isFetching = false;
     }
