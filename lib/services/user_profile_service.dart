@@ -130,56 +130,26 @@ class UserProfileService extends ChangeNotifier {
   }
 
   // --------------------------------------------------------
-  // Default profile seeded with realistic demo data
+  // Default profile seeded with empty/real data
   // --------------------------------------------------------
   static UserProfile _buildDefaultProfile(String id) {
+    final email = FirebaseAuth.instance.currentUser?.email ?? '';
+    
     return UserProfile(
       id: id,
-      name: 'Sarah Ahmed',
-      email: 'sarah.ahmed@email.com',
-      phone: '+20 100 123 4567',
-      bio:
-          'Passionate software engineer and digital marketing enthusiast with 3+ years experience building scalable web applications and leading data-driven marketing campaigns.',
-      location: 'Cairo, Egypt',
-      skills: [
-        'Flutter', 'Dart', 'Python', 'React',
-        'Node.js', 'SQL', 'Machine Learning',
-        'SEO', 'Google Analytics', 'Content Strategy',
-      ],
-      careerFields: ['Software Engineering', 'Digital Marketing'],
-      preferredIndustries: ['Technology', 'E-Commerce', 'FinTech'],
+      name: '',
+      email: email,
+      phone: '',
+      bio: '',
+      location: '',
+      skills: [],
+      careerFields: [],
+      preferredIndustries: [],
       preferredWorkMode: 'Hybrid',
-      expectedSalaryMin: 25,
-      expectedSalaryMax: 55,
-      experiences: [
-        Experience(
-          id: 'exp_001',
-          jobTitle: 'Junior Flutter Developer',
-          company: 'TechCairo Solutions',
-          startDate: 'Jan 2023',
-          endDate: 'Present',
-          description: 'Built mobile apps using Flutter and Dart.',
-          responsibilityKeywords: ['Flutter', 'Dart', 'Firebase', 'REST API', 'mobile'],
-        ),
-        Experience(
-          id: 'exp_002',
-          jobTitle: 'Digital Marketing Intern',
-          company: 'GrowthLab Egypt',
-          startDate: 'Jun 2022',
-          endDate: 'Dec 2022',
-          description: 'Managed SEO, Google Ads, and social media campaigns.',
-          responsibilityKeywords: ['SEO', 'Google Ads', 'social media', 'analytics', 'campaigns'],
-        ),
-      ],
-      educations: [
-        Education(
-          id: 'edu_001',
-          degree: 'Bachelor of Science',
-          institution: 'Cairo University',
-          fieldOfStudy: 'Computer Science',
-          graduationYear: '2022',
-        ),
-      ],
+      expectedSalaryMin: 0,
+      expectedSalaryMax: 0,
+      experiences: [],
+      educations: [],
     );
   }
 }

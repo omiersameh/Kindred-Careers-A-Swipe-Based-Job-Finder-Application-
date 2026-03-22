@@ -11,12 +11,12 @@ import 'package:google_fonts/google_fonts.dart';
 const kGold = Color(0xFFC9A84C); // Primary gold accent
 const kGoldLight = Color(0xFFE8C878); // Light gold for text / highlights
 const kGoldDim = Color(0xFF8A6D2A); // Muted gold for borders
-const kCream = Color(0xFFF5E8C0); // Cream text on dark bg
+const kCream = Color(0xFFFFFFFF); // White body text instead of cream
 
-const kBg1 = Color(0xFF060B18); // Darkest navy (top-left)
-const kBg2 = Color(0xFF0A1628); // Mid navy
-const kBg3 = Color(0xFF0D1F3A); // Slight teal navy
-const kBg4 = Color(0xFF0B1830); // Bottom shade
+const kBg1 = Color(0xFF121212); // Darkest gray
+const kBg2 = Color(0xFF1A1A1A); // Mid gray
+const kBg3 = Color(0xFF222222); // Lighter gray
+const kBg4 = Color(0xFF191919); // Bottom shade
 
 const kGlassBg = Color(0x0DFFFFFF); // 5% white = glass surface
 const kGlassBorder = Color(0x1AFFFFFF); // 10% white = glass edge

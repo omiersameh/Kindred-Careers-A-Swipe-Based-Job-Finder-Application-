@@ -43,9 +43,17 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl  = TextEditingController();
 
-  // ── Step 2: Location & Age ──────────────────────────────────
+  // ── Step 2: Location & Contact ──────────────────────────────
   final _locationCtrl = TextEditingController();
   final _ageCtrl      = TextEditingController();
+  final _phoneCtrl    = TextEditingController();
+  final _emailCtrl    = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailCtrl.text = FirebaseAuth.instance.currentUser?.email ?? '';
+  }
 
   // ── Step 3: Education ───────────────────────────────────────
   String _educationStatus = '';
@@ -86,7 +94,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   @override
   void dispose() {
     for (final c in [
-      _firstNameCtrl, _lastNameCtrl, _locationCtrl, _ageCtrl,
+      _firstNameCtrl, _lastNameCtrl, _locationCtrl, _ageCtrl, _phoneCtrl, _emailCtrl,
       _institutionCtrl, _degreeCtrl, _fieldOfStudyCtrl, _gradYearCtrl,
       _bioCtrl,
     ]) { c.dispose(); }
@@ -124,6 +132,10 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       case 1:
         if (_locationCtrl.text.trim().isEmpty) {
           _snack('Please enter your location.');
+          return false;
+        }
+        if (_emailCtrl.text.trim().isEmpty) {
+          _snack('Please provide a contact email.');
           return false;
         }
         final age = int.tryParse(_ageCtrl.text.trim());
@@ -189,6 +201,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
     svc.updateProfile(svc.profile.copyWith(
       name: fullName,
+      email: _emailCtrl.text.trim(),
+      phone: _phoneCtrl.text.trim(),
       location: _locationCtrl.text.trim(),
       age: int.tryParse(_ageCtrl.text.trim()) ?? 0,
       careerFields: _selectedFieldIds
@@ -333,17 +347,23 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   );
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 1: Location & Age
+  // STEP 1: Location & Contact
   // ─────────────────────────────────────────────────────────────
   Widget _buildStep1() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      _stepTitle('Where are you from?', 'Help us find local opportunities.'),
+      _stepTitle('Where are you from?', 'Help us find local opportunities and contact you.'),
       _glassField(_locationCtrl, 'City, Country (e.g. Cairo, Egypt)', Icons.location_on_outlined),
       const SizedBox(height: 12),
-      _glassField(_ageCtrl, 'Age', Icons.cake_outlined,
-          type: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
+      Row(children: [
+        Expanded(child: _glassField(_ageCtrl, 'Age', Icons.cake_outlined,
+            type: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
+        const SizedBox(width: 12),
+        Expanded(flex: 2, child: _glassField(_phoneCtrl, 'Phone (Optional)', Icons.phone_outlined, type: TextInputType.phone)),
+      ]),
+      const SizedBox(height: 12),
+      _glassField(_emailCtrl, 'Contact Email', Icons.email_outlined, type: TextInputType.emailAddress),
     ],
   );
 

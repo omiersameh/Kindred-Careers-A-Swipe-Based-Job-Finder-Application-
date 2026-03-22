@@ -135,7 +135,49 @@ class JobRecommendationService {
         }
       }
     } catch (e) {
-      print('⚠️ Backend unreachable: $e');
+      print('⚠️ Backend unreachable or timed out: $e');
+      print('🔄 Falling back to offline mock jobs.');
+      
+      final mockJobs = [
+        Job(
+          id: 'job_${DateTime.now().millisecondsSinceEpoch}_1',
+          title: 'Senior Flutter Developer',
+          company: 'TechCorp',
+          location: 'Remote',
+          jobType: 'Full-time',
+          description: 'Looking for an experienced Flutter engineer...',
+          requiredSkills: ['Flutter', 'Dart', 'Firebase'],
+          industry: 'Technology',
+          matchScore: 0.95,
+          vibeTag: '🚀 High Growth',
+          summaryBullets: ['Lead mobile app team', 'Migrate legacy apps to Flutter'],
+        ),
+        Job(
+          id: 'job_${DateTime.now().millisecondsSinceEpoch}_2',
+          title: 'Digital Marketing Manager',
+          company: 'Growth.io',
+          location: 'Hybrid',
+          jobType: 'Full-time',
+          description: 'Drive growth and user acquisition...',
+          requiredSkills: ['SEO', 'Content Strategy', 'Google Analytics'],
+          industry: 'Marketing',
+          matchScore: 0.88,
+          vibeTag: '📈 Impact',
+          summaryBullets: ['Manage \$1M ad spend', 'Run A/B tests'],
+        ),
+      ];
+
+      final existingIds = _buffer.map((j) => j.id).toSet();
+      int added = 0;
+      for (final job in mockJobs) {
+        if (!existingIds.contains(job.id) && !_seenIds.contains(job.id)) {
+          _buffer.add(job);
+          added++;
+        }
+      }
+      
+      if (added == 0) _feedExhausted = true;
+
     } finally {
       _isFetching = false;
     }

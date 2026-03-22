@@ -33,8 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Job> _jobs = [];
   bool _isLoading = true;
   bool _isCVGenerating = false;
-  int _totalSwiped = 0;
-  int _totalLiked = 0;
 
   @override
   void initState() {
@@ -100,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _handleSwipeRight(job);
     else if (direction == CardSwiperDirection.left) _handleSwipeLeft(job);
     _scrollOffset.value = 0;
-    setState(() => _totalSwiped++);
     // Remove swiped job so listing count stays accurate
     // (CardSwiper already moved past it — cosmetic update only)
     Future.microtask(() {
@@ -140,7 +137,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ));
     setState(() {
       _isCVGenerating = true;
-      _totalLiked++;
     });
 
     ScaffoldMessenger.of(context)
@@ -163,8 +159,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final profile = context.read<UserProfileService>().profile;
     try {
       final cv = await _cvService.generateCV(job: job, profile: profile);
-      setState(() => _isCVGenerating = false);
       if (mounted) {
+        setState(() => _isCVGenerating = false);
         ScaffoldMessenger.of(context).clearSnackBars();
         await showModalBottomSheet(
           context: context,
@@ -175,7 +171,9 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } catch (_) {
-      setState(() => _isCVGenerating = false);
+      if (mounted) {
+        setState(() => _isCVGenerating = false);
+      }
     }
   }
 
@@ -216,28 +214,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ]),
-          // Stats
-          Row(children: [
-            _statPill('👎', '$_totalSwiped', const Color(0xFFFF5252)),
-            const SizedBox(width: 8),
-            _statPill('✦', '$_totalLiked', kGold),
-          ]),
         ],
       ),
-    );
-  }
-
-  Widget _statPill(String emoji, String count, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text('$emoji $count',
-          style: GoogleFonts.outfit(
-              color: color, fontSize: 12, fontWeight: FontWeight.w700)),
     );
   }
 

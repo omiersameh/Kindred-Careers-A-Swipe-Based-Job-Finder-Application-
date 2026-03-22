@@ -1,7 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app_theme.dart';
@@ -46,16 +48,32 @@ class KindredCareersApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Kindred Careers',
-      debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(),
-      // Named route so QuestionnaireScreen can push to /main after submit
-      routes: {
-        '/main': (_) => const MainShell(),
-      },
-      home: showOnboarding ? const OnboardingScreen() : const _AuthGate(),
-    );
+    try {
+      FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+      return MaterialApp(
+        title: 'Kindred Careers',
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        navigatorObservers: [
+          FirebaseAnalyticsObserver(analytics: analytics),
+        ],
+        routes: {
+          '/main': (_) => const MainShell(),
+        },
+        home: showOnboarding ? const OnboardingScreen() : const _AuthGate(),
+      );
+    } catch (_) {
+      // Fallback if analytics errors out
+      return MaterialApp(
+        title: 'Kindred Careers',
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        routes: {
+          '/main': (_) => const MainShell(),
+        },
+        home: showOnboarding ? const OnboardingScreen() : const _AuthGate(),
+      );
+    }
   }
 }
 
@@ -166,38 +184,41 @@ class _MainShellState extends State<MainShell> {
           IndexedStack(index: _currentIndex, children: _screens),
         ],
       ),
-      bottomNavigationBar: _buildNavBar(),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: _buildFloatingNavBar(),
+        ),
+      ),
     );
   }
 
-  Widget _buildNavBar() {
+  Widget _buildFloatingNavBar() {
     return Consumer<AppState>(
       builder: (context, appState, _) {
-        return Container(
-          decoration: BoxDecoration(
-            color: kBg1.withOpacity(0.85),
-            border: Border(
-              top: BorderSide(color: kGoldDim.withOpacity(0.3), width: 1),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+              decoration: BoxDecoration(
+                color: kBg1.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _navItem(0, Icons.person_outline_rounded,
-                      Icons.person_rounded, 'Profile'),
-                  _navItem(
-                      1, Icons.layers_outlined, Icons.layers_rounded, 'Browse'),
+                  _navItem(0, Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+                  _navItem(1, Icons.layers_outlined, Icons.layers_rounded, 'Browse'),
                   _navItemBadged(
                     2,
                     Icons.bookmark_border_rounded,
@@ -219,28 +240,23 @@ class _MainShellState extends State<MainShell> {
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: isActive ? kGoldGradient : null,
-          borderRadius: BorderRadius.circular(30),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? kBg1 : kGoldDim,
-              size: 22,
+              color: isActive ? kGold : Colors.white70,
+              size: 26,
             ),
             const SizedBox(height: 3),
             Text(
               label,
               style: TextStyle(
-                color: isActive ? kBg1 : kGoldDim,
+                color: isActive ? kGold : Colors.white70,
                 fontSize: 10,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],
@@ -255,13 +271,8 @@ class _MainShellState extends State<MainShell> {
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: isActive ? kGoldGradient : null,
-          borderRadius: BorderRadius.circular(30),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -270,12 +281,12 @@ class _MainShellState extends State<MainShell> {
               children: [
                 Icon(
                   isActive ? activeIcon : icon,
-                  color: isActive ? kBg1 : kGoldDim,
-                  size: 22,
+                  color: isActive ? kGold : Colors.white70,
+                  size: 26,
                 ),
                 if (count > 0)
                   Positioned(
-                    top: -5,
+                    top: -2,
                     right: -7,
                     child: Container(
                       width: 14,
@@ -301,9 +312,9 @@ class _MainShellState extends State<MainShell> {
             Text(
               label,
               style: TextStyle(
-                color: isActive ? kBg1 : kGoldDim,
+                color: isActive ? kGold : Colors.white70,
                 fontSize: 10,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],
@@ -324,7 +335,7 @@ class _AppBackground extends StatelessWidget {
         decoration: const BoxDecoration(gradient: kBackgroundGradient),
         child: Stack(
           children: [
-            // Subtle teal glow top-right
+            // Subtle gold glow top-right
             Positioned(
               top: -100,
               right: -100,
@@ -335,14 +346,14 @@ class _AppBackground extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFF0D4F6B).withOpacity(0.25),
+                      const Color(0xFFC9A84C).withOpacity(0.15),
                       Colors.transparent,
                     ],
                   ),
                 ),
               ),
             ),
-            // Subtle purple glow bottom-left
+            // Subtle gray glow bottom-left
             Positioned(
               bottom: -80,
               left: -80,
@@ -353,7 +364,7 @@ class _AppBackground extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFF2D1B5E).withOpacity(0.3),
+                      const Color(0xFFFFFFFF).withOpacity(0.05),
                       Colors.transparent,
                     ],
                   ),
