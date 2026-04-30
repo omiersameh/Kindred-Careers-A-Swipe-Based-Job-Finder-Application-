@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app_theme.dart';
 import '../models/job.dart';
+import '../utils/banner_selector.dart';
 
 // ============================================================
 // WIDGET: JobCard — Premium glass-morphism swipe card
@@ -31,11 +32,23 @@ class JobCard extends StatefulWidget {
 class _JobCardState extends State<JobCard> {
   final ScrollController _scroll = ScrollController();
   bool _atBottom = false;
+  String? _localBanner;
 
   @override
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
+    _localBanner = BannerSelector.getRandomBanner(
+        widget.job.careerField, widget.job.specialization);
+  }
+
+  @override
+  void didUpdateWidget(covariant JobCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.job.id != widget.job.id) {
+      _localBanner = BannerSelector.getRandomBanner(
+          widget.job.careerField, widget.job.specialization);
+    }
   }
 
   void _onScroll() {
@@ -100,6 +113,8 @@ class _JobCardState extends State<JobCard> {
   // ─── Hero ────────────────────────────────────────────────
   Widget _buildHero() {
     final hasImage = widget.job.imageUrl.isNotEmpty;
+    final hasLocalBanner = _localBanner != null;
+
     return SizedBox(
       height: 230,
       child: Stack(
@@ -110,8 +125,12 @@ class _JobCardState extends State<JobCard> {
             Image.network(
               widget.job.imageUrl,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _gradientHero(),
+              errorBuilder: (_, __, ___) => hasLocalBanner
+                  ? Image.asset(_localBanner!, fit: BoxFit.cover)
+                  : _gradientHero(),
             )
+          else if (hasLocalBanner)
+            Image.asset(_localBanner!, fit: BoxFit.cover)
           else
             _gradientHero(),
 
@@ -207,11 +226,11 @@ class _JobCardState extends State<JobCard> {
 
   Widget _gradientHero() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF1A3A5C),
-            const Color(0xFF0D2540),
+            Color(0xFF1A3A5C),
+            Color(0xFF0D2540),
             kBg1,
           ],
           begin: Alignment.topLeft,
@@ -368,9 +387,12 @@ class _JobCardState extends State<JobCard> {
         children: [
           Icon(icon, size: 12, color: kGold.withOpacity(0.7)),
           const SizedBox(width: 5),
-          Text(label,
-              style: GoogleFonts.outfit(
-                  color: kCream.withOpacity(0.75), fontSize: 12)),
+          Flexible(
+            child: Text(label,
+                style: GoogleFonts.outfit(
+                    color: kCream.withOpacity(0.75), fontSize: 12),
+                overflow: TextOverflow.ellipsis),
+          ),
         ],
       ),
     );
@@ -394,39 +416,35 @@ class _JobCardState extends State<JobCard> {
   Widget _buildDecideBanner() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: AnimatedOpacity(
-        opacity: _atBottom ? 1.0 : 0.45,
-        duration: const Duration(milliseconds: 300),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: kGoldDim.withOpacity(0.3)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _decideButton(
-                    icon: Icons.close_rounded,
-                    label: 'Pass',
-                    color: const Color(0xFFFF5252),
-                    onTap: widget.onSwipeLeft,
-                  ),
-                  Container(
-                      width: 1, height: 40, color: kGoldDim.withOpacity(0.3)),
-                  _decideButton(
-                    icon: Icons.check_rounded,
-                    label: 'Apply',
-                    color: const Color(0xFF4CAF50),
-                    onTap: widget.onSwipeRight,
-                  ),
-                ],
-              ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: kGoldDim.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _decideButton(
+                  icon: Icons.close_rounded,
+                  label: 'Pass',
+                  color: const Color(0xFFFF5252),
+                  onTap: widget.onSwipeLeft,
+                ),
+                Container(
+                    width: 1, height: 40, color: kGoldDim.withOpacity(0.3)),
+                _decideButton(
+                  icon: Icons.check_rounded,
+                  label: 'Apply',
+                  color: const Color(0xFF4CAF50),
+                  onTap: widget.onSwipeRight,
+                ),
+              ],
             ),
           ),
         ),
@@ -440,26 +458,102 @@ class _JobCardState extends State<JobCard> {
     required Color color,
     VoidCallback? onTap,
   }) {
-    return GestureDetector(
+    return _AnimatedDecideButton(
+      icon: icon,
+      label: label,
+      color: color,
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withOpacity(0.12),
-              border: Border.all(color: color.withOpacity(0.5), width: 1.5),
+    );
+  }
+}
+
+/// Animated decide button with scale-bounce on tap for tactile feedback.
+class _AnimatedDecideButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _AnimatedDecideButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  State<_AnimatedDecideButton> createState() => _AnimatedDecideButtonState();
+}
+
+class _AnimatedDecideButtonState extends State<_AnimatedDecideButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.88).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(_) => _ctrl.forward();
+  void _onTapUp(_) async {
+    await _ctrl.reverse();
+    widget.onTap?.call();
+  }
+  void _onTapCancel() => _ctrl.reverse();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedBuilder(
+        animation: _scale,
+        builder: (_, child) =>
+            Transform.scale(scale: _scale.value, child: child),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.color.withOpacity(0.12),
+                border: Border.all(
+                    color: widget.color.withOpacity(0.6), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.color.withOpacity(0.2),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Icon(widget.icon, color: widget.color, size: 24),
             ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(height: 6),
-          Text(label,
-              style: GoogleFonts.outfit(
-                  color: color, fontSize: 13, fontWeight: FontWeight.w600)),
-        ],
+            const SizedBox(height: 6),
+            Text(widget.label,
+                style: GoogleFonts.outfit(
+                    color: widget.color,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }

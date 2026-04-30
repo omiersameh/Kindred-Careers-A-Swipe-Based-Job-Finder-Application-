@@ -104,6 +104,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
 
   // ── Navigation ───────────────────────────────────────────────
   void _next() {
+    FocusScope.of(context).unfocus();
     if (!_validateStep()) return;
     if (_step < _totalSteps - 1) {
       setState(() => _step++);
@@ -115,6 +116,7 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   }
 
   void _back() {
+    FocusScope.of(context).unfocus();
     if (_step > 0) {
       setState(() => _step--);
       _pageCtrl.animateToPage(_step,
@@ -229,7 +231,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Stack(children: [
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(children: [
         // Background
         Positioned.fill(
           child: DecoratedBox(
@@ -329,7 +333,8 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
             ),
           ]),
         ),
-      ]),
+        ]),
+      ),
     );
   }
 

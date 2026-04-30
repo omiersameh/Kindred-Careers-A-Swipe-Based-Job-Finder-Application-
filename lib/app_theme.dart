@@ -53,7 +53,7 @@ TextStyle kHeadline(double size, {FontWeight fw = FontWeight.w800}) =>
 
 TextStyle kBody(double size, {Color color = kCream, double opacity = 1}) =>
     GoogleFonts.outfit(
-      color: color.withOpacity(opacity),
+      color: color.withAlpha((opacity * 255).round()),
       fontSize: size,
       height: 1.5,
     );
@@ -77,7 +77,7 @@ BoxDecoration glassCard({
       border: Border.all(color: border, width: 1),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 0.3),
           blurRadius: 20,
           offset: const Offset(0, 8),
         ),
@@ -88,7 +88,7 @@ BoxDecoration glassCard({
 BoxDecoration goldBorderCard({double borderRadius = 16}) => BoxDecoration(
       color: kGlassBg,
       borderRadius: BorderRadius.circular(borderRadius),
-      border: Border.all(color: kGoldDim.withOpacity(0.5), width: 1),
+      border: Border.all(color: kGoldDim.withValues(alpha: 0.5), width: 1),
     );
 
 // ── ThemeData ─────────────────────────────────────────────────
@@ -106,7 +106,7 @@ ThemeData buildAppTheme() {
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      backgroundColor: const Color(0xFF1A1200).withOpacity(0.9),
+      backgroundColor: const Color(0xFF1A1200).withValues(alpha: 0.9),
     ),
   );
 }

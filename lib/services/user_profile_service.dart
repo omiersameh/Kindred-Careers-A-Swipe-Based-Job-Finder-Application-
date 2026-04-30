@@ -11,7 +11,10 @@ import '../models/user_profile.dart';
 // ============================================================
 
 class UserProfileService extends ChangeNotifier {
-  UserProfile _profile = _buildDefaultProfile(FirebaseAuth.instance.currentUser?.uid ?? 'user_001');
+  // Start with a truly empty default profile.
+  // The real profile is loaded in _PostAuthRouter._check() via loadProfile(),
+  // which correctly reads the UID after Firebase auth has fully initialized.
+  UserProfile _profile = _buildDefaultProfile('guest');
 
   UserProfile get profile => _profile;
 

@@ -13,6 +13,7 @@ class CV {
   final DateTime generatedAt;
   List<CVFeedback> feedbackHistory;
   int regenerationCount;
+  String? localPdfPath;
 
   CV({
     required this.id,
@@ -23,6 +24,7 @@ class CV {
     DateTime? generatedAt,
     List<CVFeedback>? feedbackHistory,
     this.regenerationCount = 0,
+    this.localPdfPath,
   })  : generatedAt = generatedAt ?? DateTime.now(),
         feedbackHistory = feedbackHistory ?? [];
 
@@ -38,6 +40,38 @@ class CV {
   @override
   String toString() =>
       'CV(jobTitle: $jobTitle, regenerations: $regenerationCount)';
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'jobId': jobId,
+      'jobTitle': jobTitle,
+      'company': company,
+      'content': content.toJson(),
+      'generatedAt': generatedAt.toIso8601String(),
+      'feedbackHistory': feedbackHistory.map((e) => e.toJson()).toList(),
+      'regenerationCount': regenerationCount,
+      'localPdfPath': localPdfPath,
+    };
+  }
+
+  factory CV.fromJson(Map<String, dynamic> json) {
+    return CV(
+      id: json['id'] ?? '',
+      jobId: json['jobId'] ?? '',
+      jobTitle: json['jobTitle'] ?? '',
+      company: json['company'] ?? '',
+      content: CVContent.fromJson(json['content'] ?? {}),
+      generatedAt: json['generatedAt'] != null 
+          ? DateTime.parse(json['generatedAt']) 
+          : DateTime.now(),
+      feedbackHistory: (json['feedbackHistory'] as List? ?? [])
+          .map((e) => CVFeedback.fromJson(e))
+          .toList(),
+      regenerationCount: json['regenerationCount'] ?? 0,
+      localPdfPath: json['localPdfPath'],
+    );
+  }
 }
 
 // ============================================================
@@ -64,6 +98,18 @@ class CVContent {
     this.targetRole = '',
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'summary': summary,
+      'skills': highlightedSkills,
+      'experiences': relevantExperiences.map((e) => e.toJson()).toList(),
+      'educationEntries': educationEntries,
+      'certifications': certifications,
+      'keyAchievements': keyAchievements,
+      'targetRole': targetRole,
+    };
+  }
+
   factory CVContent.fromJson(Map<String, dynamic> json) {
     return CVContent(
       summary: json['summary'] ?? '',
@@ -71,7 +117,10 @@ class CVContent {
       relevantExperiences: (json['experiences'] as List? ?? [])
           .map((e) => CVExperience.fromJson(e))
           .toList(),
-      educationEntries: [], // These aren't AI generated, so leave empty. Handled in UI if needed.
+      educationEntries: List<String>.from(json['educationEntries'] ?? []),
+      certifications: List<String>.from(json['certifications'] ?? []),
+      keyAchievements: List<String>.from(json['keyAchievements'] ?? []),
+      targetRole: json['targetRole'] ?? '',
     );
   }
 }
@@ -96,11 +145,20 @@ class CVExperience {
     required this.tailoredBullets,
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'jobTitle': jobTitle,
+      'company': company,
+      'duration': duration,
+      'achievements': tailoredBullets,
+    };
+  }
+
   factory CVExperience.fromJson(Map<String, dynamic> json) {
     return CVExperience(
       jobTitle: json['jobTitle'] ?? '',
       company: json['company'] ?? '',
-      duration: '${json['startDate'] ?? ''} - ${json['endDate'] ?? ''}',
+      duration: json['duration'] ?? '',
       tailoredBullets: List<String>.from(json['achievements'] ?? []),
     );
   }
@@ -122,6 +180,22 @@ class CVFeedback {
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
-  @override
-  String toString() => 'CVFeedback("$feedbackText" at $timestamp)';
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'feedbackText': feedbackText,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+
+  factory CVFeedback.fromJson(Map<String, dynamic> json) {
+    return CVFeedback(
+      id: json['id'] ?? '',
+      feedbackText: json['feedbackText'] ?? '',
+      timestamp: json['timestamp'] != null 
+          ? DateTime.parse(json['timestamp']) 
+          : DateTime.now(),
+    );
+  }
 }
+

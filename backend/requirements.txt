@@ -13,6 +13,9 @@ apscheduler>=3.10.0
 requests>=2.32.0
 beautifulsoup4>=4.12.0
 lxml>=5.0.0
+httpx>=0.27.0
 tf-keras  # Required for sentence-transformers compatibility with Keras 3
 einops    # Required for Nomic embedding model architecture
 
+# PDF Generation
+reportlab>=4.0.0

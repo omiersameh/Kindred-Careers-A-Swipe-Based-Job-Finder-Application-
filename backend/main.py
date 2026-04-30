@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import asyncio
+import io
 
 from models.user_profile import UserProfile
 from models.job import Job, SwipeAction
@@ -10,9 +12,11 @@ from models.cv import CVContent, CVFeedback
 
 from services.recommendation import get_recommended_jobs
 from services.cv_generator import generate_tailored_cv, regenerate_tailored_cv
+from services.cv_pdf_generator import generate_cv_pdf
 from services.embeddings import embed_profile
 from services.vector_store import search_jobs, get_job_count
 from worker import run_ingestion_pipeline, start_background_worker, get_worker_status
+
 
 app = FastAPI(
     title="Kindred Careers API",
@@ -28,11 +32,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Startup: begin background scrape/embed worker ──────────────
+# ── Startup: skip scrape, serve from existing ChromaDB data ────────────
 @app.on_event("startup")
 async def on_startup():
-    print("🚀 Kindred Careers API starting up...")
-    # Start background worker as a non-blocking background task
+    job_count = get_job_count()
+    print(f"🚀 Kindred Careers API v2.0 starting up... (ChromaDB has {job_count} jobs)")
+    if job_count > 0:
+        print("✅ Fast path: serving from existing ChromaDB — skipping startup scrape.")
+    else:
+        print("⚠️  ChromaDB is empty. Triggering initial ingest in background...")
+    # Always start the background refresh worker (first run delayed by _INTERVAL_MINUTES)
     asyncio.create_task(start_background_worker())
 
 # ── Request Payloads ───────────────────────────────────────────
@@ -51,6 +60,19 @@ class CVRegenerateRequest(BaseModel):
     feedback_text: str
     job: Job
     user_profile: UserProfile
+
+class CVPDFRequest(BaseModel):
+    """Payload for generating an ATS PDF from an existing CV JSON."""
+    summary: str
+    skills: List[str]
+    experiences: List[dict]       # [{jobTitle, company, startDate, endDate, achievements}]
+    education_entries: List[str] = []
+    candidate_name: str = ""
+    candidate_email: str = ""
+    candidate_phone: str = ""
+    candidate_location: str = ""
+    target_role: str = ""
+    target_company: str = ""
 
 class FeedRequest(BaseModel):
     user_profile: UserProfile
@@ -153,5 +175,36 @@ async def api_regenerate_cv(req: CVRegenerateRequest):
             req.user_profile
         )
         return cv_content
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/generate-cv-pdf")
+async def api_generate_cv_pdf(req: CVPDFRequest):
+    """
+    Converts existing CV JSON content into an ATS-optimized PDF.
+    Returns the PDF as a downloadable file stream.
+    """
+    try:
+        pdf_bytes = generate_cv_pdf(
+            summary=req.summary,
+            skills=req.skills,
+            experiences=req.experiences,
+            education_entries=req.education_entries,
+            candidate_name=req.candidate_name,
+            candidate_email=req.candidate_email,
+            candidate_phone=req.candidate_phone,
+            candidate_location=req.candidate_location,
+            target_role=req.target_role,
+            target_company=req.target_company,
+        )
+        safe_company = req.target_company.replace(" ", "_") or "Company"
+        safe_role = req.target_role.replace(" ", "_") or "CV"
+        filename = f"CV_{req.candidate_name.replace(' ', '_')}_{safe_role}_{safe_company}.pdf"
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

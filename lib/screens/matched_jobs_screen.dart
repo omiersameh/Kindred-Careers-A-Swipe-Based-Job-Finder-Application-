@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../models/job.dart';
 import '../services/cv_generation_service.dart';
+import '../services/user_profile_service.dart';
 import '../widgets/cv_preview_dialog.dart';
 
 // ============================================================
@@ -66,6 +67,11 @@ class MatchedJobsScreen extends StatelessWidget {
           Expanded(
             child: Consumer<AppState>(
               builder: (context, appState, _) {
+                if (appState.isLoadingMatches) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: kGoldDim),
+                  );
+                }
                 if (appState.matchedJobs.isEmpty) return _buildEmpty();
                 return ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
@@ -78,6 +84,7 @@ class MatchedJobsScreen extends StatelessWidget {
                 );
               },
             ),
+
           ),
         ]),
       ),
@@ -94,7 +101,7 @@ class MatchedJobsScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Text(
-            'Swipe right on jobs you like to generate tailored CVs and apply',
+            'Swipe right on jobs you like — they\'ll appear here instantly while your CV is being crafted',
             style: kBody(14, opacity: 0.5),
             textAlign: TextAlign.center,
           ),
@@ -106,9 +113,10 @@ class MatchedJobsScreen extends StatelessWidget {
 
 // ============================================================
 // WIDGET: _MatchCard — individual glassmorphism match card
+// Tappable: opens CV preview sheet
 // ============================================================
 
-class _MatchCard extends StatelessWidget {
+class _MatchCard extends StatefulWidget {
   final Job job;
   final dynamic cv;
   final AppState appState;
@@ -117,157 +125,325 @@ class _MatchCard extends StatelessWidget {
       {required this.job, required this.cv, required this.appState});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: kGlassBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: kGoldDim.withOpacity(0.3), width: 1),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6)),
-              ],
-            ),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // ── Header
-              Row(children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: kGold.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: kGoldDim.withOpacity(0.4)),
-                  ),
-                  child: Center(
-                      child: Text(job.logoEmoji,
-                          style: const TextStyle(fontSize: 22))),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(job.title,
-                            style: GoogleFonts.outfit(
-                                color: kCream,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700)),
-                        Text(job.company,
-                            style: kBody(13, color: kGoldDim, opacity: 0.85)),
-                      ]),
-                ),
-                // Match badge
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    gradient: kGoldGradient,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(job.matchPercent,
-                      style: GoogleFonts.outfit(
-                          color: kBg1,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800)),
-                ),
-              ]),
+  State<_MatchCard> createState() => _MatchCardState();
+}
 
-              const SizedBox(height: 12),
-              // ── Meta chips
-              Wrap(spacing: 8, runSpacing: 6, children: [
-                _chip(Icons.location_on_outlined, job.location),
-                _chip(Icons.laptop_mac_outlined, job.workMode),
-                if (job.salaryRange.isNotEmpty)
-                  _chip(Icons.monetization_on_outlined, job.salaryRange),
-              ]),
+class _MatchCardState extends State<_MatchCard> {
+  bool _isGeneratingCV = false;
+  bool _isDownloadingPDF = false;
 
-              const SizedBox(height: 12),
-              // ── CV status
-              _cvStatus(),
-              const SizedBox(height: 14),
+  void _openCVPreview() {
+    if (widget.cv == null) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CVPreviewDialog(
+        job: widget.job,
+        initialCV: widget.cv!,
+        isNewMatch: false,
+      ),
+    );
+  }
 
-              // ── Actions
-              Row(children: [
-                // Remove
-                GestureDetector(
-                  onTap: () => _confirmRemove(context),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: const Color(0xFFFF5252).withOpacity(0.4)),
-                    ),
-                    child: const Icon(Icons.close_rounded,
-                        color: Color(0xFFFF5252), size: 16),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // View CV
-                if (cv != null)
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _viewCV(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: kGold.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: kGoldDim.withOpacity(0.4)),
-                        ),
-                        child: Center(
-                            child:
-                                Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.description_outlined,
-                              color: kGold, size: 14),
-                          const SizedBox(width: 6),
-                          Text('View CV', style: kLabel(12)),
-                        ])),
-                      ),
-                    ),
-                  ),
-                if (cv != null) const SizedBox(width: 8),
-                // Apply
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showApplyConfirmation(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        gradient: kGoldGradient,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                              color: kGold.withOpacity(0.25), blurRadius: 10)
-                        ],
-                      ),
-                      child: Center(
-                          child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        const Icon(Icons.send_rounded, color: kBg1, size: 14),
-                        const SizedBox(width: 6),
-                        Text('Apply',
-                            style: GoogleFonts.outfit(
-                                color: kBg1,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700)),
-                      ])),
-                    ),
-                  ),
-                ),
-              ]),
+  Future<void> _generateCV() async {
+    setState(() => _isGeneratingCV = true);
+    try {
+      final profile = context.read<UserProfileService>().profile;
+      final cvService = CVGenerationService();
+      final cv = await cvService.generateCV(job: widget.job, profile: profile);
+      if (mounted) {
+        widget.appState.updateCV(widget.job.id, cv);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Row(children: [
+            const Icon(Icons.check_circle_outline,
+                color: Color(0xFF4CAF50), size: 16),
+            const SizedBox(width: 8),
+            Text('CV generated! Tap to preview.',
+                style: GoogleFonts.outfit(color: Colors.white)),
+          ]),
+          backgroundColor: const Color(0xFF1B3A2B),
+          duration: const Duration(seconds: 3),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('CV generation failed. Try again.',
+              style: GoogleFonts.outfit(color: Colors.white)),
+          backgroundColor: const Color(0xAAD32F2F),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _isGeneratingCV = false);
+    }
+  }
+
+  Future<void> _downloadPDF() async {
+    if (widget.cv == null) return;
+    setState(() => _isDownloadingPDF = true);
+    try {
+      final profile = context.read<UserProfileService>().profile;
+      final cvService = CVGenerationService();
+      final path = await cvService.downloadCVPdf(
+        cv: widget.cv!,
+        profile: profile,
+        job: widget.job,
+      );
+      if (mounted) {
+        if (path != null) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Row(children: [
+              const Icon(Icons.picture_as_pdf, color: kGold, size: 16),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('PDF saved & opened!')),
             ]),
+            backgroundColor: const Color(0xFF1A1200),
+          ));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('PDF download failed. Is the backend running?'),
+            backgroundColor: Color(0xAAD32F2F),
+          ));
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _isDownloadingPDF = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.cv != null ? _openCVPreview : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: kGlassBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: widget.cv != null
+                      ? kGoldDim.withOpacity(0.4)
+                      : kGoldDim.withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6)),
+                ],
+              ),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                // ── Header
+                Row(children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: kGold.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: kGoldDim.withOpacity(0.4)),
+                    ),
+                    child: Center(
+                        child: Text(widget.job.logoEmoji,
+                            style: const TextStyle(fontSize: 22))),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.job.title,
+                              style: GoogleFonts.outfit(
+                                  color: kCream,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700)),
+                          Text(widget.job.company,
+                              style:
+                                  kBody(13, color: kGoldDim, opacity: 0.85)),
+                        ]),
+                  ),
+                  // Match badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      gradient: kGoldGradient,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(widget.job.matchPercent,
+                        style: GoogleFonts.outfit(
+                            color: kBg1,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800)),
+                  ),
+                ]),
+
+                const SizedBox(height: 12),
+                // ── Meta chips
+                Wrap(spacing: 8, runSpacing: 6, children: [
+                  _chip(Icons.location_on_outlined, widget.job.location),
+                  _chip(Icons.laptop_mac_outlined, widget.job.workMode),
+                  if (widget.job.salaryRange.isNotEmpty)
+                    _chip(Icons.monetization_on_outlined,
+                        widget.job.salaryRange),
+                ]),
+
+                const SizedBox(height: 12),
+                // ── CV status
+                _cvStatus(),
+                const SizedBox(height: 14),
+
+                // ── Actions
+                Row(children: [
+                  // Remove
+                  GestureDetector(
+                    onTap: () => _confirmRemove(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 9),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFFFF5252).withOpacity(0.4)),
+                      ),
+                      child: const Icon(Icons.close_rounded,
+                          color: Color(0xFFFF5252), size: 16),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  if (widget.cv == null) ...[
+                    // Generate CV button
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _isGeneratingCV ? null : _generateCV,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: kGoldGradient,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: kGold.withOpacity(0.25),
+                                  blurRadius: 10),
+                            ],
+                          ),
+                          child: Center(
+                            child: _isGeneratingCV
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: kBg1))
+                                : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.auto_awesome_rounded,
+                                          color: kBg1, size: 14),
+                                      const SizedBox(width: 6),
+                                      Text('Generate CV',
+                                          style: GoogleFonts.outfit(
+                                              color: kBg1,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700)),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    // Download PDF button
+                    GestureDetector(
+                      onTap: _isDownloadingPDF ? null : _downloadPDF,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 9),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border:
+                              Border.all(color: kGoldDim.withOpacity(0.5)),
+                          color: kGold.withOpacity(0.06),
+                        ),
+                        child: _isDownloadingPDF
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: kGold))
+                            : const Icon(Icons.picture_as_pdf_outlined,
+                                color: kGold, size: 18),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Preview CV button
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _openCVPreview,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: kGold.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border:
+                                Border.all(color: kGoldDim.withOpacity(0.4)),
+                          ),
+                          child: Center(
+                              child:
+                                  Row(mainAxisSize: MainAxisSize.min, children: [
+                            const Icon(Icons.description_outlined,
+                                color: kGold, size: 14),
+                            const SizedBox(width: 6),
+                            Text('Preview CV', style: kLabel(12)),
+                          ])),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Apply button
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _showApplyConfirmation(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: kGoldGradient,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: kGold.withOpacity(0.25),
+                                  blurRadius: 10)
+                            ],
+                          ),
+                          child: Center(
+                              child:
+                                  Row(mainAxisSize: MainAxisSize.min, children: [
+                            const Icon(Icons.send_rounded,
+                                color: kBg1, size: 14),
+                            const SizedBox(width: 6),
+                            Text('Apply',
+                                style: GoogleFonts.outfit(
+                                    color: kBg1,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700)),
+                          ])),
+                        ),
+                      ),
+                    ),
+                  ],
+                ]),
+              ]),
+            ),
           ),
         ),
       ),
@@ -275,7 +451,7 @@ class _MatchCard extends StatelessWidget {
   }
 
   Widget _cvStatus() {
-    if (cv == null) {
+    if (widget.cv == null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
@@ -284,9 +460,13 @@ class _MatchCard extends StatelessWidget {
           border: Border.all(color: kGoldDim.withOpacity(0.3)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.hourglass_empty_rounded, color: kGoldDim, size: 13),
-          const SizedBox(width: 6),
-          Text('Awaiting CV Generation', style: kBody(11, color: kGoldDim)),
+          const SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(strokeWidth: 1.5, color: kGoldDim),
+          ),
+          const SizedBox(width: 8),
+          Text('Generating CV…', style: kBody(11, color: kGoldDim)),
         ]),
       );
     }
@@ -302,9 +482,9 @@ class _MatchCard extends StatelessWidget {
             color: Color(0xFF4CAF50), size: 13),
         const SizedBox(width: 6),
         Text(
-          cv.wasModified
-              ? 'CV Tailored (v${cv.regenerationCount + 1})'
-              : 'CV Tailored ✓',
+          widget.cv.wasModified
+              ? 'CV Tailored (v${widget.cv.regenerationCount + 1}) · Tap to preview'
+              : 'CV Ready · Tap card to preview',
           style:
               GoogleFonts.outfit(color: const Color(0xFF4CAF50), fontSize: 12),
         ),
@@ -324,18 +504,14 @@ class _MatchCard extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 11, color: kGoldDim.withOpacity(0.7)),
         const SizedBox(width: 4),
-        Text(label, style: kBody(11, color: kGoldDim, opacity: 0.8)),
+        Flexible(
+          child: Text(
+            label,
+            style: kBody(11, color: kGoldDim, opacity: 0.8),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ]),
-    );
-  }
-
-  void _viewCV(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) =>
-          CVPreviewDialog(job: job, initialCV: cv!, isNewMatch: false),
     );
   }
 
@@ -347,9 +523,9 @@ class _MatchCard extends StatelessWidget {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(color: kGoldDim.withOpacity(0.4))),
-        title: Text('Apply to ${job.title}?', style: kHeadline(17)),
+        title: Text('Apply to ${widget.job.title}?', style: kHeadline(17)),
         content: Text(
-          'Your tailored CV will be submitted to ${job.company}.',
+          'Your tailored CV will be submitted to ${widget.job.company}.',
           style: kBody(14, opacity: 0.7),
         ),
         actions: [
@@ -361,7 +537,7 @@ class _MatchCard extends StatelessWidget {
             onTap: () {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('✦ Applied to ${job.company}!',
+                content: Text('✦ Applied to ${widget.job.company}!',
                     style: GoogleFonts.outfit(color: kGoldLight)),
                 backgroundColor: const Color(0xAA1A1200),
               ));
@@ -390,7 +566,8 @@ class _MatchCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(color: kGoldDim.withOpacity(0.4))),
         title: Text('Remove Match?', style: kHeadline(17)),
-        content: Text('This will remove ${job.title} from your saved matches.',
+        content: Text(
+            'This will remove ${widget.job.title} from your saved matches.',
             style: kBody(14, opacity: 0.7)),
         actions: [
           TextButton(
@@ -399,7 +576,7 @@ class _MatchCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              appState.removeMatch(job.id);
+              widget.appState.removeMatch(widget.job.id);
               Navigator.pop(ctx);
             },
             child: Text('Remove',

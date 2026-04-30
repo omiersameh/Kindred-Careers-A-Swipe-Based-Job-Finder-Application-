@@ -20,15 +20,22 @@ import '../models/user_profile.dart';
 // ============================================================
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
+import 'database_service.dart';
 
 class CVGenerationService {
-  // 🔴 1. INSERT YOUR API KEY HERE
-  static const String _apiKey = 'YOUR_API_KEY_HERE';
 
-  // 🔴 2. SET YOUR BACKEND OR LLM API URL HERE
-  static const String _apiUrl =
-      'http://192.168.100.12:8000/api/generate-cv'; // Replaced 10.0.2.2 proxy with PC IPv4
+  // 🟢 Fetched securely from the .env file
+  static String get _apiUrl =>
+      dotenv.env['API_URL'] ?? 'http://127.0.0.1:8000/api/generate-cv';
+
+  static String get _pdfApiUrl =>
+      dotenv.env['API_URL']?.replaceAll('generate-cv', 'generate-cv-pdf')
+          ?? 'http://127.0.0.1:8000/api/generate-cv-pdf';
 
   // 🔴 3. CHANGE TO TRUE TO USE THE REAL API
   static const bool _useRealAPI = true;
@@ -182,17 +189,18 @@ class CVGenerationService {
   Future<CV> _generateCVFromAPI(
       Job job, UserProfile profile, String cvId) async {
     try {
-      final response = await http.post(
-        Uri.parse(_apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer $_apiKey', // Only needed if hitting OpenAI directly
-        },
-        body: jsonEncode({
-          'job': job.toJson(),
-          'user_profile': profile.toJson(),
-        }),
-      );
+      final response = await http
+          .post(
+            Uri.parse(_apiUrl),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'job': job.toJson(),
+              'user_profile': profile.toJson(),
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -210,10 +218,10 @@ class CVGenerationService {
           content: content,
         );
       } else {
-        throw Exception('API failed: ${response.body}');
+        throw Exception('CV generation failed (${response.statusCode}): ${response.body}');
       }
     } catch (e) {
-      print('API Error: $e');
+      debugPrint('CV API Error: $e');
       rethrow;
     }
   }
@@ -270,7 +278,7 @@ class CVGenerationService {
         throw Exception('API regeneration failed: ${response.body}');
       }
     } catch (e) {
-      print('API Error: $e');
+      debugPrint('API Error: $e');
       rethrow;
     }
   }
@@ -321,7 +329,68 @@ class CVGenerationService {
       'Adapted to ${job.workMode} work environment across multiple project cycles',
     ];
   }
+
+  // ----------------------------------------------------------
+  // PDF DOWNLOAD: Generate ATS PDF and open on device
+  // ----------------------------------------------------------
+
+  Future<String?> downloadCVPdf({
+    required CV cv,
+    required UserProfile profile,
+    required Job job,
+  }) async {
+    try {
+      final experiences = cv.content.relevantExperiences.map((e) {
+        final parts = e.duration.split(' - ');
+        return {
+          'jobTitle': e.jobTitle,
+          'company': e.company,
+          'startDate': parts.isNotEmpty ? parts.first : '',
+          'endDate': parts.length > 1 ? parts.last : '',
+          'achievements': e.tailoredBullets,
+        };
+      }).toList();
+
+      final educationEntries = profile.educations
+          .map((e) => '${e.degree} in ${e.fieldOfStudy} — ${e.institution} (${e.graduationYear})')
+          .toList();
+
+      final response = await http.post(
+        Uri.parse(_pdfApiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'summary': cv.content.summary,
+          'skills': cv.content.highlightedSkills,
+          'experiences': experiences,
+          'education_entries': educationEntries,
+          'candidate_name': profile.name,
+          'candidate_email': profile.email,
+          'candidate_phone': profile.phone,
+          'candidate_location': profile.location,
+          'target_role': job.title,
+          'target_company': job.company,
+        }),
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final dir = await getApplicationDocumentsDirectory();
+        final safeName =
+            '${profile.name.replaceAll(' ', '_')}_${job.company.replaceAll(' ', '_')}.pdf';
+        final file = File('${dir.path}/$safeName');
+        await file.writeAsBytes(response.bodyBytes);
+        await OpenFile.open(file.path);
+        return file.path;
+      } else {
+        debugPrint('PDF generation failed: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('PDF download error: \$e');
+      return null;
+    }
+  }
 }
+// ============================================================
 
 // ============================================================
 // SERVICE: AppState (Global State Provider)
@@ -329,11 +398,26 @@ class CVGenerationService {
 // ============================================================
 
 class AppState extends ChangeNotifier {
+  final DatabaseService _dbService = DatabaseService();
   final List<Job> _matchedJobs = [];
   final Map<String, CV> _generatedCVs = {};
+  bool _isLoadingMatches = true;
 
+  bool get isLoadingMatches => _isLoadingMatches;
   List<Job> get matchedJobs => List.unmodifiable(_matchedJobs);
   Map<String, CV> get generatedCVs => Map.unmodifiable(_generatedCVs);
+
+  AppState() {
+    _initMatches();
+  }
+
+  Future<void> _initMatches() async {
+    final data = await _dbService.loadUserMatches();
+    _matchedJobs.addAll(data['jobs'] as List<Job>);
+    _generatedCVs.addAll(data['cvs'] as Map<String, CV>);
+    _isLoadingMatches = false;
+    notifyListeners();
+  }
 
   /// Adds a liked job and its generated CV to matched list.
   void addMatch(Job job, CV cv) {
@@ -342,12 +426,29 @@ class AppState extends ChangeNotifier {
     }
     _generatedCVs[job.id] = cv;
     notifyListeners();
+    _dbService.saveMatch(job, cv);
   }
 
-  /// Updates an existing CV (after regeneration).
+  /// Adds a job immediately on swipe-right, before CV is generated.
+  /// The CV will be attached later via updateCV() when generation completes.
+  void addMatchWithoutCV(Job job) {
+    if (!_matchedJobs.any((j) => j.id == job.id)) {
+      _matchedJobs.add(job);
+      notifyListeners();
+      _dbService.saveMatch(job); // Save job without CV for now
+    }
+  }
+
+  /// Updates an existing CV (after regeneration or PDF download).
   void updateCV(String jobId, CV updatedCV) {
     _generatedCVs[jobId] = updatedCV;
     notifyListeners();
+    
+    // Find the corresponding job to update the DB
+    final job = _matchedJobs.firstWhere((j) => j.id == jobId, orElse: () => _matchedJobs.first);
+    if (job.id == jobId) {
+      _dbService.saveMatch(job, updatedCV);
+    }
   }
 
   /// Returns the CV for a given job id, or null.
@@ -358,5 +459,6 @@ class AppState extends ChangeNotifier {
     _matchedJobs.removeWhere((j) => j.id == jobId);
     _generatedCVs.remove(jobId);
     notifyListeners();
+    _dbService.deleteMatch(jobId);
   }
 }

@@ -39,6 +39,12 @@ dependencies:
 
   # UUID generation
   uuid: ^4.4.0
+  flutter_dotenv: ^6.0.0
+
+  # File handling — PDF download & open
+  path_provider: ^2.1.4
+  open_file: ^3.3.2
+  cloud_firestore: ^5.6.12
 
 dev_dependencies:
   flutter_test:
@@ -55,4 +61,186 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/banners/Technology/
+    - assets/images/banners/Technology/Software Developer/
+    - assets/images/banners/Technology/Mobile App Developer/
+    - assets/images/banners/Technology/Web Developer - Frontend/
+    - assets/images/banners/Technology/Web Developer - Backend/
+    - assets/images/banners/Technology/Full-Stack Developer/
+    - assets/images/banners/Technology/DevOps Engineer/
+    - assets/images/banners/Technology/Cloud Architect/
+    - assets/images/banners/Technology/Cybersecurity Analyst/
+    - assets/images/banners/Technology/AI & ML Engineer/
+    - assets/images/banners/Technology/Data Scientist/
+    - assets/images/banners/Technology/Data Analyst/
+    - assets/images/banners/Technology/Database Administrator/
+    - assets/images/banners/Technology/QA & Test Engineer/
+    - assets/images/banners/Technology/IT Support & Systems Admin/
+    - assets/images/banners/Technology/Blockchain Developer/
+    - assets/images/banners/Technology/Game Developer/
+    - assets/images/banners/Technology/Embedded Systems Engineer/
+    - assets/images/banners/Technology/UI & UX Designer (Tech)/
+    - assets/images/banners/Technology/Product Manager (Tech)/
+    - assets/images/banners/Technology/Technical Writer/
+    - assets/images/banners/Engineering/
+    - assets/images/banners/Engineering/Civil Engineer/
+    - assets/images/banners/Engineering/Structural Engineer/
+    - assets/images/banners/Engineering/Mechanical Engineer/
+    - assets/images/banners/Engineering/Electrical Engineer/
+    - assets/images/banners/Engineering/Electronics Engineer/
+    - assets/images/banners/Engineering/Chemical Engineer/
+    - assets/images/banners/Engineering/Petroleum_Oil & Gas Engineer/
+    - assets/images/banners/Engineering/Aerospace Engineer/
+    - assets/images/banners/Engineering/Biomedical Engineer/
+    - assets/images/banners/Engineering/Environmental Engineer/
+    - assets/images/banners/Engineering/Industrial Engineer/
+    - assets/images/banners/Engineering/Materials Engineer/
+    - assets/images/banners/Engineering/Nuclear Engineer/
+    - assets/images/banners/Engineering/Robotics Engineer/
+    - assets/images/banners/Engineering/Automation Engineer/
+    - assets/images/banners/Engineering/Construction Manager/
+    - assets/images/banners/Engineering/Surveyor/
+    - assets/images/banners/Medical & Health/
+    - assets/images/banners/Medical & Health/General Practitioner (Doctor)/
+    - assets/images/banners/Medical & Health/Surgeon/
+    - assets/images/banners/Medical & Health/Dentist/
+    - assets/images/banners/Medical & Health/Pharmacist/
+    - assets/images/banners/Medical & Health/Nurse & Nursing Practitioner/
+    - assets/images/banners/Medical & Health/Physiotherapist/
+    - assets/images/banners/Medical & Health/Psychologist & Therapist/
+    - assets/images/banners/Medical & Health/Radiologist/
+    - assets/images/banners/Medical & Health/Cardiologist/
+    - assets/images/banners/Medical & Health/Dermatologist/
+    - assets/images/banners/Medical & Health/Pediatrician/
+    - assets/images/banners/Medical & Health/Optometrist/
+    - assets/images/banners/Medical & Health/Nutritionist & Dietitian/
+    - assets/images/banners/Medical & Health/Medical Lab Technician/
+    - assets/images/banners/Medical & Health/Veterinarian/
+    - assets/images/banners/Medical & Health/Public Health Specialist/
+    - assets/images/banners/Medical & Health/Healthcare Administrator/
+    - assets/images/banners/Business & Finance/
+    - assets/images/banners/Business & Finance/Accountant & Auditor/
+    - assets/images/banners/Business & Finance/Financial Analyst/
+    - assets/images/banners/Business & Finance/Investment Banker/
+    - assets/images/banners/Business & Finance/Business Analyst/
+    - assets/images/banners/Business & Finance/Management Consultant/
+    - assets/images/banners/Business & Finance/Marketing Manager/
+    - assets/images/banners/Business & Finance/Digital Marketing Specialist/
+    - assets/images/banners/Business & Finance/SEO & SEM Specialist/
+    - assets/images/banners/Business & Finance/Sales Manager/
+    - assets/images/banners/Business & Finance/Supply Chain Manager/
+    - assets/images/banners/Business & Finance/Operations Manager/
+    - assets/images/banners/Business & Finance/HR Manager & Recruiter/
+    - assets/images/banners/Business & Finance/Project Manager/
+    - assets/images/banners/Business & Finance/Entrepreneur & Startup Founder/
+    - assets/images/banners/Business & Finance/E-Commerce Manager/
+    - assets/images/banners/Business & Finance/Real Estate Agent/
+    - assets/images/banners/Business & Finance/Actuary/
+    - assets/images/banners/Business & Finance/Risk Analyst/
+    - assets/images/banners/Art & Design/
+    - assets/images/banners/Art & Design/Graphic Designer/
+    - assets/images/banners/Art & Design/Illustrator/
+    - assets/images/banners/Art & Design/Photographer/
+    - assets/images/banners/Art & Design/Videographer & Video Editor/
+    - assets/images/banners/Art & Design/Motion Graphics Designer/
+    - assets/images/banners/Art & Design/Animator (2D & 3D)/
+    - assets/images/banners/Art & Design/UI & UX Designer (Creative)/
+    - assets/images/banners/Art & Design/Fashion Designer/
+    - assets/images/banners/Art & Design/Interior Designer/
+    - assets/images/banners/Art & Design/Industrial & Product Designer/
+    - assets/images/banners/Art & Design/Architect (Creative Design)/
+    - assets/images/banners/Art & Design/Music Producer/
+    - assets/images/banners/Art & Design/Sound Engineer/
+    - assets/images/banners/Art & Design/Singer & Performer/
+    - assets/images/banners/Art & Design/Art Director/
+    - assets/images/banners/Art & Design/Tattoo Artist/
+    - assets/images/banners/Art & Design/Jewellery Designer/
+    - assets/images/banners/Art & Design/Sculptor & Fine Artist/
+    - assets/images/banners/Media & Communication/
+    - assets/images/banners/Media & Communication/Journalist & Reporter/
+    - assets/images/banners/Media & Communication/Content Creator & YouTuber/
+    - assets/images/banners/Media & Communication/Social Media Manager/
+    - assets/images/banners/Media & Communication/Public Relations Specialist/
+    - assets/images/banners/Media & Communication/Broadcaster & TV Presenter/
+    - assets/images/banners/Media & Communication/Podcast Producer/
+    - assets/images/banners/Media & Communication/Copywriter/
+    - assets/images/banners/Media & Communication/Editor (Print & Digital)/
+    - assets/images/banners/Media & Communication/Translator & Interpreter/
+    - assets/images/banners/Media & Communication/Voice-Over Artist/
+    - assets/images/banners/Media & Communication/Event Coordinator/
+    - assets/images/banners/Media & Communication/Community Manager/
+    - assets/images/banners/Media & Communication/Film Director/
+    - assets/images/banners/Media & Communication/Screenwriter/
+    - assets/images/banners/Education/
+    - assets/images/banners/Education/School Teacher (Primary)/
+    - assets/images/banners/Education/School Teacher (Secondary)/
+    - assets/images/banners/Education/University Lecturer & Professor/
+    - assets/images/banners/Education/Curriculum Developer/
+    - assets/images/banners/Education/Special Education Teacher/
+    - assets/images/banners/Education/Online Course Creator & EdTech/
+    - assets/images/banners/Education/Corporate Trainer/
+    - assets/images/banners/Education/Academic Advisor & Counselor/
+    - assets/images/banners/Education/School Principal & Administrator/
+    - assets/images/banners/Education/Early Childhood Educator/
+    - assets/images/banners/Legal & Law/
+    - assets/images/banners/Legal & Law/Lawyer & Attorney/
+    - assets/images/banners/Legal & Law/Corporate Lawyer/
+    - assets/images/banners/Legal & Law/Criminal Defense Attorney/
+    - assets/images/banners/Legal & Law/Family Law Attorney/
+    - assets/images/banners/Legal & Law/Paralegal/
+    - assets/images/banners/Legal & Law/Judge & Magistrate/
+    - assets/images/banners/Legal & Law/Legal Consultant/
+    - assets/images/banners/Legal & Law/Compliance Officer/
+    - assets/images/banners/Legal & Law/Intellectual Property Specialist/
+    - assets/images/banners/Legal & Law/Notary Public/
+    - assets/images/banners/Science & Research/
+    - assets/images/banners/Science & Research/Research Scientist/
+    - assets/images/banners/Science & Research/Biologist & Microbiologist/
+    - assets/images/banners/Science & Research/Chemist/
+    - assets/images/banners/Science & Research/Physicist/
+    - assets/images/banners/Science & Research/Geologist & Earth Scientist/
+    - assets/images/banners/Science & Research/Astronomer & Astrophysicist/
+    - assets/images/banners/Science & Research/Marine Biologist/
+    - assets/images/banners/Science & Research/Botanist & Ecologist/
+    - assets/images/banners/Science & Research/Forensic Scientist/
+    - assets/images/banners/Science & Research/Laboratory Technician/
+    - assets/images/banners/Science & Research/Epidemiologist/
+    - assets/images/banners/Science & Research/Neuroscientist/
+    - assets/images/banners/Skilled Trades/
+    - assets/images/banners/Skilled Trades/Electrician/
+    - assets/images/banners/Skilled Trades/Plumber/
+    - assets/images/banners/Skilled Trades/Welder/
+    - assets/images/banners/Skilled Trades/Carpenter & Joiner/
+    - assets/images/banners/Skilled Trades/Mechanic (Auto)/
+    - assets/images/banners/Skilled Trades/HVAC Technician/
+    - assets/images/banners/Skilled Trades/Machinist & CNC Operator/
+    - assets/images/banners/Skilled Trades/Construction Worker/
+    - assets/images/banners/Skilled Trades/Painter & Decorator/
+    - assets/images/banners/Skilled Trades/Stonemason & Tiler/
+    - assets/images/banners/Skilled Trades/Roofer/
+    - assets/images/banners/Skilled Trades/Pipefitter/
+    - assets/images/banners/Hospitality & Tourism/
+    - assets/images/banners/Hospitality & Tourism/Hotel Manager/
+    - assets/images/banners/Hospitality & Tourism/Chef & Sous-Chef/
+    - assets/images/banners/Hospitality & Tourism/Restaurant Manager/
+    - assets/images/banners/Hospitality & Tourism/Barista & Bartender/
+    - assets/images/banners/Hospitality & Tourism/Tour Guide/
+    - assets/images/banners/Hospitality & Tourism/Travel Agent/
+    - assets/images/banners/Hospitality & Tourism/Flight Attendant/
+    - assets/images/banners/Hospitality & Tourism/Event Planner/
+    - assets/images/banners/Hospitality & Tourism/Front-of-House Staff/
+    - assets/images/banners/Hospitality & Tourism/Housekeeper & Hospitality Staff/
+    - assets/images/banners/Social & Community/
+    - assets/images/banners/Social & Community/Social Worker/
+    - assets/images/banners/Social & Community/Community Organizer/
+    - assets/images/banners/Social & Community/NGO & Nonprofit Manager/
+    - assets/images/banners/Social & Community/Youth Worker/
+    - assets/images/banners/Social & Community/Counselor & Life Coach/
+    - assets/images/banners/Social & Community/Human Rights Advocate/
+    - assets/images/banners/Social & Community/Volunteer Coordinator/
+    - assets/images/banners/Social & Community/Policy Analyst/
+    - assets/images/banners/Social & Community/Urban Planner/
     - assets/images/
+    - assets/images/onboarding/
+    - .env
+

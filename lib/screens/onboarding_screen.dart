@@ -25,28 +25,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const _pages = [
     _OnboardingPage(
-      emoji: '✦',
+      image: 'assets/images/onboarding/welcome.png',
       title: 'Welcome to\nKindred Careers',
       subtitle:
           'The job search app built for the age of AI.\nFind roles that truly match who you are.',
       glowColor: Color(0xFFC9A84C),
     ),
     _OnboardingPage(
-      emoji: '👆',
+      image: 'assets/images/onboarding/swipe.png',
       title: 'Swipe Your\nWay to Work',
       subtitle:
           'Browse curated job listings with a swipe.\nRight to apply, left to pass — it\'s that simple.',
       glowColor: Color(0xFF0D9F8F),
     ),
     _OnboardingPage(
-      emoji: '🧠',
+      image: 'assets/images/onboarding/ai.png',
       title: 'AI-Powered\nMatching',
       subtitle:
           'Our engine reads your skills, experience, and\npreferences — then ranks every listing for you.',
       glowColor: Color(0xFF6B3DA6),
     ),
     _OnboardingPage(
-      emoji: '📄',
+      image: 'assets/images/onboarding/cv.png',
       title: 'Tailored CVs,\nInstantly',
       subtitle:
           'Swipe right and we\'ll generate a custom CV\nperfectly crafted for that exact role.',
@@ -180,30 +180,43 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Emoji icon in a glass circle
-          ClipOval(
+          // Illustration with subtle floating animation
+          ClipRRect(
+            borderRadius: BorderRadius.circular(30),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
-                width: 120,
-                height: 120,
+                width: 200,
+                height: 200,
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: kGlassBg,
-                  shape: BoxShape.circle,
-                  border:
-                      Border.all(color: kGoldDim.withOpacity(0.4), width: 1.5),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: kGoldDim.withOpacity(0.3), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: page.glowColor.withOpacity(0.15),
+                      blurRadius: 40,
+                      spreadRadius: 10,
+                    )
+                  ],
                 ),
                 child: Center(
-                  child: Text(page.emoji, style: const TextStyle(fontSize: 52)),
+                  child: Image.asset(
+                    page.image,
+                    fit: BoxFit.contain,
+                  )
+                  .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                  .slideY(begin: -0.05, end: 0.05, duration: 2.seconds, curve: Curves.easeInOut),
                 ),
               ),
             ),
           )
               .animate(key: ValueKey(index))
-              .fadeIn(duration: 400.ms, delay: 100.ms)
-              .scale(begin: const Offset(0.8, 0.8), duration: 400.ms),
+              .fadeIn(duration: 500.ms)
+              .scale(begin: const Offset(0.9, 0.9), duration: 500.ms, curve: Curves.easeOutBack),
 
-          const SizedBox(height: 36),
+          const SizedBox(height: 48),
 
           Text(
             page.title,
@@ -243,12 +256,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 // ─────────────────────────────────────────────────────────────
 
 class _OnboardingPage {
-  final String emoji;
+  final String image;
   final String title;
   final String subtitle;
   final Color glowColor;
   const _OnboardingPage(
-      {required this.emoji,
+      {required this.image,
       required this.title,
       required this.subtitle,
       required this.glowColor});

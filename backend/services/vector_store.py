@@ -91,6 +91,8 @@ def add_job(job: dict, embedding: List[float]) -> str:
         "company":      safe_str(job.get("company")),
         "location":     safe_str(job.get("location")),
         "industry":     safe_str(job.get("industry")),
+        "careerField":  safe_str(job.get("careerField")),
+        "specialization": safe_str(job.get("specialization")),
         "workMode":     safe_str(job.get("workMode"), "Hybrid"),
         "minSalary":    safe_float(job.get("minSalary")),
         "maxSalary":    safe_float(job.get("maxSalary")),
@@ -174,6 +176,8 @@ def search_jobs(
             "company":        meta.get("company", ""),
             "location":       meta.get("location", ""),
             "industry":       meta.get("industry", ""),
+            "careerField":    meta.get("careerField", ""),
+            "specialization": meta.get("specialization", ""),
             "workMode":       meta.get("workMode", "Hybrid"),
             "minSalary":      meta.get("minSalary", 0),
             "maxSalary":      meta.get("maxSalary", 0),
@@ -215,6 +219,17 @@ def search_jobs(
 def get_job_count() -> int:
     """Returns the total number of jobs stored in ChromaDB."""
     return _get_collection().count()
+
+
+def get_existing_job_ids() -> Set[str]:
+    """
+    Returns the set of all stable job IDs currently in ChromaDB.
+    Used by the ingestion worker to skip re-summarizing already-stored jobs.
+    """
+    col = _get_collection()
+    if col.count() == 0:
+        return set()
+    return set(col.get(include=[])['ids'])
 
 
 def delete_old_jobs(older_than_days: int = 30) -> int:

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,8 @@ import '../models/cv.dart';
 import '../models/job.dart';
 import '../services/cv_generation_service.dart';
 import '../services/user_profile_service.dart';
+import '../app_theme.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 // ============================================================
 // WIDGET: CVPreviewDialog
@@ -31,6 +34,7 @@ class CVPreviewDialog extends StatefulWidget {
 class _CVPreviewDialogState extends State<CVPreviewDialog> {
   late CV _currentCV;
   bool _isRegenerating = false;
+  bool _isDownloadingPdf = false;
   bool _showFeedbackInput = false;
   final _feedbackController = TextEditingController();
 
@@ -94,6 +98,41 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
     );
   }
 
+  Future<void> _downloadPdf() async {
+    setState(() => _isDownloadingPdf = true);
+    try {
+      final profile = context.read<UserProfileService>().profile;
+      final cvService = CVGenerationService();
+      final path = await cvService.downloadCVPdf(
+        cv: _currentCV,
+        profile: profile,
+        job: widget.job,
+      );
+      if (mounted) {
+        if (path != null) {
+          _currentCV.localPdfPath = path;
+          context.read<AppState>().updateCV(widget.job.id, _currentCV);
+          
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Row(children: [
+              const Icon(Icons.picture_as_pdf, color: kGold, size: 16),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('PDF saved and opened!')),
+            ]),
+            backgroundColor: const Color(0xFF1A1200),
+          ));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('PDF download failed. Is the backend running?'),
+            backgroundColor: Color(0xAAD32F2F),
+          ));
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _isDownloadingPdf = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -102,11 +141,15 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
       maxChildSize: 0.96,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF0D1B2A),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: kBg1.withOpacity(0.9),
+                border: Border(top: BorderSide(color: kGoldDim.withOpacity(0.3))),
+              ),
           child: Column(
             children: [
               // Drag handle
@@ -137,6 +180,8 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
               _buildActionBar(),
             ],
           ),
+        ),
+        ),
         );
       },
     );
@@ -155,15 +200,11 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
               children: [
                 Text(
                   'Your Tailored CV',
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: kHeadline(18),
                 ),
                 Text(
                   '${widget.job.title} · ${widget.job.company}',
-                  style: GoogleFonts.inter(color: Colors.white54, fontSize: 13),
+                  style: kBody(13, opacity: 0.6),
                 ),
               ],
             ),
@@ -190,19 +231,19 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _section('👤 Professional Summary', cv.summary),
+        _section('👤 Professional Summary', cv.summary).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1),
         const SizedBox(height: 20),
-        _section('⚡ Key Skills', null, chips: cv.highlightedSkills),
+        _section('⚡ Key Skills', null, chips: cv.highlightedSkills).animate().fadeIn(duration: 400.ms, delay: 100.ms).slideX(begin: -0.1),
         const SizedBox(height: 20),
-        _sectionTitle('💼 Relevant Experience'),
-        ...cv.relevantExperiences.map((e) => _expCard(e)),
+        _sectionTitle('💼 Relevant Experience').animate().fadeIn(duration: 400.ms, delay: 200.ms),
+        ...cv.relevantExperiences.asMap().entries.map((e) => _expCard(e.value).animate().fadeIn(duration: 400.ms, delay: (250 + (e.key * 100)).ms).slideX(begin: -0.1)),
         const SizedBox(height: 20),
-        _section('🎓 Education', cv.educationEntries.join('\n')),
+        _section('🎓 Education', cv.educationEntries.join('\n')).animate().fadeIn(duration: 400.ms, delay: 400.ms).slideX(begin: -0.1),
         const SizedBox(height: 20),
         _section(
           '🏆 Key Achievements',
           cv.keyAchievements.map((a) => '• $a').join('\n'),
-        ),
+        ).animate().fadeIn(duration: 400.ms, delay: 500.ms).slideX(begin: -0.1),
       ],
     );
   }
@@ -216,11 +257,7 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
         if (text != null)
           Text(
             text,
-            style: GoogleFonts.inter(
-              color: Colors.white70,
-              fontSize: 14,
-              height: 1.6,
-            ),
+            style: kBody(14, opacity: 0.8).copyWith(height: 1.6),
           ),
         if (chips != null)
           Wrap(
@@ -228,17 +265,21 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
             runSpacing: 6,
             children: chips
                 .map(
-                  (s) => Chip(
-                    label: Text(
+                  (s) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: kGlassBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: kGoldDim.withOpacity(0.3)),
+                    ),
+                    child: Text(
                       s,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.outfit(
                         fontSize: 12,
-                        color: Colors.white,
+                        color: kCream,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    backgroundColor: const Color(0xFF1A3A5C),
-                    side: const BorderSide(color: Color(0xFF2A5F8A)),
-                    padding: EdgeInsets.zero,
                   ),
                 )
                 .toList(),
@@ -261,12 +302,13 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
   Widget _expCard(CVExperience exp) {
     return Container(
       margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
-      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: glassCard(borderRadius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -306,21 +348,24 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
           ),
         ],
       ),
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildLoadingState() {
-    return const SizedBox(
+    return SizedBox(
       height: 300,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Color(0xFF4A90E2)),
-            SizedBox(height: 20),
+            const CircularProgressIndicator(color: kGold, strokeWidth: 2),
+            const SizedBox(height: 20),
             Text(
-              '🤖 LLM is tailoring your CV…',
-              style: TextStyle(color: Colors.white60, fontSize: 14),
+              '✦ AI is tailoring your CV…',
+              style: kBody(14, opacity: 0.6),
             ),
           ],
         ),
@@ -329,12 +374,15 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
   }
 
   Widget _buildActionBar() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D1B2A),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
-      ),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          decoration: BoxDecoration(
+            color: kBg1.withOpacity(0.9),
+            border: Border(top: BorderSide(color: kGoldDim.withOpacity(0.2))),
+          ),
       child: Column(
         children: [
           if (_showFeedbackInput) ...[
@@ -424,29 +472,32 @@ class _CVPreviewDialogState extends State<CVPreviewDialog> {
                 ),
               ),
               const SizedBox(width: 10),
-              if (widget.isNewMatch)
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton.icon(
-                    onPressed: _confirmApply,
-                    icon: const Icon(Icons.send_rounded, size: 16),
-                    label: Text(
-                      'Apply Now',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+              // Download PDF button
+              GestureDetector(
+                onTap: _isDownloadingPdf ? null : _downloadPdf,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: kGold.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: kGoldDim.withOpacity(0.4)),
                   ),
+                  child: _isDownloadingPdf
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: kGold))
+                      : const Icon(Icons.picture_as_pdf_outlined,
+                          color: kGold, size: 18),
                 ),
+              ),
             ],
           ),
         ],
+      ),
+        ),
       ),
     );
   }

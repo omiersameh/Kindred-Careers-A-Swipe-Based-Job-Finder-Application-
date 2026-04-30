@@ -1,15 +1,16 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../app_theme.dart';
 import '../models/job.dart';
 import '../models/swipe_action.dart';
 import '../services/cv_generation_service.dart';
 import '../services/job_recommendation_service.dart';
 import '../services/user_profile_service.dart';
-import '../widgets/cv_preview_dialog.dart';
 import '../widgets/job_card.dart';
 
 // ============================================================
@@ -32,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Job> _jobs = [];
   bool _isLoading = true;
-  bool _isCVGenerating = false;
 
   @override
   void initState() {
@@ -51,17 +51,19 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = true);
     final profile = context.read<UserProfileService>().profile;
     _recService.getRecommendedJobsAsync(profile).then((jobs) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _jobs = jobs;
           _isLoading = false;
         });
+      }
     }).catchError((_) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _jobs = _recService.getRecommendedJobs(profile);
           _isLoading = false;
         });
+      }
     });
   }
 
@@ -82,11 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
       _jobs = [];
     });
     _recService.getRecommendedJobsAsync(profile).then((jobs) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _jobs = jobs;
           _isLoading = false;
         });
+      }
     });
   }
 
@@ -94,17 +97,10 @@ class _HomeScreenState extends State<HomeScreen> {
       int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     if (previousIndex >= _jobs.length) return true;
     final job = _jobs[previousIndex];
-    if (direction == CardSwiperDirection.right)
+    if (direction == CardSwiperDirection.right) {
       _handleSwipeRight(job);
-    else if (direction == CardSwiperDirection.left) _handleSwipeLeft(job);
+    } else if (direction == CardSwiperDirection.left) _handleSwipeLeft(job);
     _scrollOffset.value = 0;
-    // Remove swiped job so listing count stays accurate
-    // (CardSwiper already moved past it — cosmetic update only)
-    Future.microtask(() {
-      if (mounted && previousIndex < _jobs.length) {
-        setState(() => _jobs.removeAt(previousIndex));
-      }
-    });
     return true;
   }
 
@@ -135,47 +131,65 @@ class _HomeScreenState extends State<HomeScreen> {
       company: job.company,
       direction: SwipeDirection.right,
     ));
-    setState(() {
-      _isCVGenerating = true;
-    });
 
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(SnackBar(
-        content: Row(children: [
-          const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: kGold)),
-          const SizedBox(width: 12),
-          Text('✦  Crafting your tailored CV…',
-              style: GoogleFonts.outfit(color: kGoldLight)),
-        ]),
-        backgroundColor: const Color(0xAA1A1200),
-        duration: const Duration(seconds: 4),
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-      ));
+    // ── Step 1: Save job to Matches immediately ─────────────────────
+    final appState = context.read<AppState>();
+    appState.addMatchWithoutCV(job);
 
+    // Show a quick confirmation snackbar
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(
+          content: Row(children: [
+            const Text('✦', style: TextStyle(color: kGold, fontSize: 16)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Saved! Generating your tailored CV…',
+                style: GoogleFonts.outfit(color: kGoldLight),
+              ),
+            ),
+          ]),
+          backgroundColor: const Color(0xAA1A1200),
+          duration: const Duration(seconds: 3),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+        ));
+    }
+
+    // ── Step 2: Generate CV in background ──────────────────────────
     final profile = context.read<UserProfileService>().profile;
     try {
       final cv = await _cvService.generateCV(job: job, profile: profile);
       if (mounted) {
-        setState(() => _isCVGenerating = false);
-        ScaffoldMessenger.of(context).clearSnackBars();
-        await showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) =>
-              CVPreviewDialog(job: job, initialCV: cv, isNewMatch: true),
-        );
+        // Attach CV to the already-saved match
+        appState.updateCV(job.id, cv);
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(SnackBar(
+            content: Row(children: [
+              const Icon(Icons.check_circle_outline, color: Color(0xFF4CAF50), size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'CV ready for ${job.title} — view in Matches tab!',
+                  style: GoogleFonts.outfit(color: Colors.white),
+                ),
+              ),
+            ]),
+            backgroundColor: const Color(0xFF1B3A2B),
+            duration: const Duration(seconds: 4),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+          ));
       }
-    } catch (_) {
+    } catch (e) {
+      // Job is already saved — CV can be generated later from the Matches tab
       if (mounted) {
-        setState(() => _isCVGenerating = false);
+        debugPrint('Background CV generation failed: $e');
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -203,17 +217,23 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Title
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Browse', style: kHeadline(26)),
-            Consumer<UserProfileService>(
-              builder: (_, svc, __) => Text(
-                svc.profile.careerFields.isNotEmpty
-                    ? 'Matched to: ${svc.profile.careerFields.first}'
-                    : 'RECOMMENDED',
-                style: kLabel(11, color: kGoldDim),
-              ),
-            ),
-          ]),
+          Row(
+            children: [
+              Image.asset('assets/images/app_logo.png', width: 36, height: 36),
+              const SizedBox(width: 12),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Browse', style: kHeadline(26)),
+                Consumer<UserProfileService>(
+                  builder: (_, svc, __) => Text(
+                    svc.profile.careerFields.isNotEmpty
+                        ? 'Matched to: ${svc.profile.careerFields.first}'
+                        : 'RECOMMENDED',
+                    style: kLabel(11, color: kGoldDim),
+                  ),
+                ),
+              ]),
+            ],
+          ),
         ],
       ),
     );
@@ -241,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
             cardsCount: _jobs.length,
             onSwipe: _onSwipe,
             onEnd: _onDeckEnd, // ← fires when last card is swiped
-            isLoop: false, // ← CRITICAL: prevents cycling
+            isLoop: false, // ← CRITICAL: prevents cycle
             numberOfCardsDisplayed: _jobs.length < 3 ? _jobs.length : 3,
             backCardOffset: const Offset(0, -18),
             scale: 0.93,
@@ -263,103 +283,52 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     // APPLY overlay
                     if (!hideOverlay && hPct > 20)
-                      _swipeOverlay('APPLY ✓', const Color(0xFF4CAF50), true),
+                      _swipeOverlay('✓', kGold, true),
                     // PASS overlay
                     if (!hideOverlay && hPct < -20)
-                      _swipeOverlay('PASS ✗', const Color(0xFFFF5252), false),
+                      _swipeOverlay('✗', const Color(0xFFE0E0E0), false),
                   ]);
                 },
               );
             },
           ),
         ),
-
-        // Action buttons
-        _buildActionButtons(),
       ]),
-
-      // CV generating full-screen overlay
-      if (_isCVGenerating)
-        ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-            child: Container(
-              color: Colors.black.withOpacity(0.6),
-              child: Center(
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const CircularProgressIndicator(color: kGold, strokeWidth: 3),
-                  const SizedBox(height: 20),
-                  Text('Crafting your CV…', style: kHeadline(18)),
-                  const SizedBox(height: 8),
-                  Text('Tailored by AI to match this role',
-                      style: kBody(14, opacity: 0.6)),
-                ]),
-              ),
-            ),
-          ),
-        ),
     ]);
   }
 
-  Widget _swipeOverlay(String label, Color color, bool isRight) {
+
+  Widget _swipeOverlay(String icon, Color color, bool isRight) {
     return Positioned(
-      top: 40,
-      left: isRight ? 20 : null,
-      right: isRight ? null : 20,
+      top: 60,
+      left: isRight ? 40 : null,
+      right: isRight ? null : 40,
       child: Transform.rotate(
         angle: isRight ? -0.2 : 0.2,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
+            shape: BoxShape.circle,
+            color: color.withOpacity(0.15),
             border: Border.all(color: color, width: 3),
             boxShadow: [
-              BoxShadow(color: color.withOpacity(0.2), blurRadius: 12)
+              BoxShadow(
+                color: color.withOpacity(0.4),
+                blurRadius: 20,
+                spreadRadius: 8,
+              )
             ],
           ),
-          child: Text(label,
+          child: Text(icon,
               style: GoogleFonts.outfit(
                   color: color,
-                  fontSize: 20,
+                  fontSize: 52,
                   fontWeight: FontWeight.w900,
                   shadows: [
-                    Shadow(color: color.withOpacity(0.5), blurRadius: 8)
+                    Shadow(color: color.withOpacity(0.8), blurRadius: 16)
                   ])),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(40, 8, 40, 100),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _actionBtn(Icons.close_rounded, const Color(0xFFFF5252), 56,
-              () => _swiperController.swipe(CardSwiperDirection.left)),
-          _actionBtn(Icons.star_outline_rounded, kGold, 44, () {}),
-          _actionBtn(Icons.check_rounded, const Color(0xFF4CAF50), 56,
-              () => _swiperController.swipe(CardSwiperDirection.right)),
-        ],
-      ),
-    );
-  }
-
-  Widget _actionBtn(
-      IconData icon, Color color, double size, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: kBg2.withOpacity(0.7),
-          border: Border.all(color: color.withOpacity(0.5), width: 2),
-          boxShadow: [BoxShadow(color: color.withOpacity(0.2), blurRadius: 14)],
-        ),
-        child: Icon(icon, color: color, size: size * 0.45),
+        ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+         .shimmer(duration: 1000.ms, color: Colors.white.withOpacity(0.3)),
       ),
     );
   }

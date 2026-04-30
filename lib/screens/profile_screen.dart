@@ -289,6 +289,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             GestureDetector(
               onTap: () async {
                 await AuthService.signOut();
+                if (context.mounted) {
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/', (route) => false);
+                }
               },
               child: Container(
                 margin: const EdgeInsets.only(right: 8),
@@ -398,7 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (profile.location.isNotEmpty) ...[
               const SizedBox(height: 4),
               Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.location_on_outlined, size: 12, color: kGoldDim),
+                const Icon(Icons.location_on_outlined, size: 12, color: kGoldDim),
                 const SizedBox(width: 4),
                 Text(profile.location,
                     style: kBody(12, color: kGoldDim, opacity: 0.8)),
@@ -509,8 +513,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ─── Gold pill chips ─────────────────────────────────────
   Widget _pillChips(List<String> chips, {void Function(String)? onRemove}) {
-    if (chips.isEmpty)
+    if (chips.isEmpty) {
       return Text('None added yet', style: kBody(13, opacity: 0.4));
+    }
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -533,7 +538,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(width: 6),
                     GestureDetector(
                       onTap: () => onRemove(c),
-                      child: Icon(Icons.close, size: 13, color: kGoldDim),
+                      child: const Icon(Icons.close, size: 13, color: kGoldDim),
                     ),
                   ],
                 ]),

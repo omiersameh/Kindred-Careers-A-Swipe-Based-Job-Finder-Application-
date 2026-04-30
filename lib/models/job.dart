@@ -24,6 +24,8 @@ class Job {
   final String imageUrl; // Company / listing image URL from scraper
   final List<String> summaryBullets; // 3-4 Gemini-generated bullet summary
   final String vibeTag; // e.g. 'Fast-paced Startup'
+  final String careerField; // e.g. 'Technology'
+  final String specialization; // e.g. 'Full-Stack Developer'
 
   Job({
     required this.id,
@@ -44,6 +46,8 @@ class Job {
     this.imageUrl = '',
     List<String>? summaryBullets,
     this.vibeTag = '',
+    this.careerField = '',
+    this.specialization = '',
   })  : requiredSkills = requiredSkills ?? [],
         keywords = keywords ?? [],
         summaryBullets = summaryBullets ?? [];
@@ -85,6 +89,8 @@ class Job {
       'maxSalary': salaryMax,
       'requiredSkills': requiredSkills,
       'matchScore': matchScore,
+      'careerField': careerField,
+      'specialization': specialization,
     };
   }
 
@@ -120,6 +126,8 @@ class Job {
       imageUrl: str(json['imageUrl']),
       summaryBullets: strList(json['summaryBullets']),
       vibeTag: str(json['vibeTag']),
+      careerField: str(json['careerField']),
+      specialization: str(json['specialization']),
     );
   }
 }

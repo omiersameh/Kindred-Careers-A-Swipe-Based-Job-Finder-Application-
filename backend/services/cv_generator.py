@@ -9,10 +9,10 @@ from models.cv import CV, CVContent, CVExperience
 # Load .env from the backend/ directory
 load_dotenv()
 
-# OpenRouter client — API key loaded from .env
+# Groq client — API key loaded from .env
 client = AsyncOpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("CV_OPENROUTER_API_KEY", ""),
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("GROQ_API_KEY", ""),
 )
 _CV_MODEL = os.getenv("CV_MODEL", "openai/gpt-oss-120b:free")
 

@@ -4,9 +4,11 @@ from typing import List, Optional
 from sentence_transformers import SentenceTransformer
 from models.user_profile import UserProfile
 
-# nomic-embed-text is a state-of-the-art open-source embedding model.
-# It runs entirely locally via sentence-transformers - no API key needed.
-_MODEL_NAME = os.getenv("EMBED_MODEL", "nomic-ai/nomic-embed-text-v1.5")
+# all-MiniLM-L6-v2: 384-dim, ~90MB — 8× smaller than nomic-embed-text-v1.5.
+# No API key needed; runs locally via sentence-transformers.
+# IMPORTANT: If changing the embedding model, delete ./chroma_db and re-run ingestion
+# (ChromaDB collections are dimension-specific and can't mix 384d with 768d vectors).
+_MODEL_NAME = os.getenv("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 _model: Optional[SentenceTransformer] = None
 
 
@@ -15,7 +17,7 @@ def _get_model() -> SentenceTransformer:
     global _model
     if _model is None:
         print(f"📦 Loading embedding model: {_MODEL_NAME}...")
-        _model = SentenceTransformer(_MODEL_NAME, trust_remote_code=True)
+        _model = SentenceTransformer(_MODEL_NAME)
         print("✅ Embedding model loaded.")
     return _model
 

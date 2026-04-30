@@ -65,11 +65,12 @@ class _SignInScreenState extends State<SignInScreen>
     });
     final err =
         await AuthService.signInWithEmail(_emailCtrl.text, _passwordCtrl.text);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _isLoading = false;
         _errorMsg = err;
       });
+    }
     // Navigation handled by StreamBuilder in main.dart
   }
 
@@ -81,11 +82,12 @@ class _SignInScreenState extends State<SignInScreen>
     });
     final err = await AuthService.signUpWithEmail(
         _email2Ctrl.text, _password2Ctrl.text, _nameCtrl.text);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _isLoading = false;
         _errorMsg = err;
       });
+    }
   }
 
   Future<void> _googleSignIn() async {
@@ -94,11 +96,12 @@ class _SignInScreenState extends State<SignInScreen>
       _errorMsg = null;
     });
     final err = await AuthService.signInWithGoogle();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _isLoading = false;
         _errorMsg = err;
       });
+    }
   }
 
   Future<void> _forgotPassword() async {
@@ -174,18 +177,21 @@ class _SignInScreenState extends State<SignInScreen>
               // ── Logo / Brand ──
               Column(children: [
                 Container(
-                  width: 72,
-                  height: 72,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
-                    gradient: kGoldGradient,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
-                      BoxShadow(color: kGold.withOpacity(0.4), blurRadius: 24)
+                      BoxShadow(color: kGold.withOpacity(0.3), blurRadius: 20)
                     ],
                   ),
-                  child: const Center(
-                      child: Text('✦',
-                          style: TextStyle(fontSize: 32, color: kBg1))),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Text('Kindred Careers', style: kHeadline(26)),
@@ -262,6 +268,7 @@ class _SignInScreenState extends State<SignInScreen>
                         ),
                         child: TabBar(
                           controller: _tabCtrl,
+                          indicatorSize: TabBarIndicatorSize.tab,
                           indicator: BoxDecoration(
                             gradient: kGoldGradient,
                             borderRadius: BorderRadius.circular(12),

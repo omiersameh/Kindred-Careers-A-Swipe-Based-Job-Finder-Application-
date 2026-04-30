@@ -16,8 +16,14 @@ import 'screens/matched_jobs_screen.dart';
 import 'services/user_profile_service.dart';
 import 'services/cv_generation_service.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'utils/banner_selector.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  await BannerSelector.init();
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -203,12 +209,12 @@ class _MainShellState extends State<MainShell> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               decoration: BoxDecoration(
-                color: kBg1.withOpacity(0.4),
+                color: kBg1.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 5),
                   ),
@@ -346,7 +352,7 @@ class _AppBackground extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFFC9A84C).withOpacity(0.15),
+                      const Color(0xFFC9A84C).withValues(alpha: 0.15),
                       Colors.transparent,
                     ],
                   ),
@@ -364,7 +370,7 @@ class _AppBackground extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFFFFFFFF).withOpacity(0.05),
+                      const Color(0xFFFFFFFF).withValues(alpha: 0.05),
                       Colors.transparent,
                     ],
                   ),
