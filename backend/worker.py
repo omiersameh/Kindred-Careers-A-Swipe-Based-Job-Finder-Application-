@@ -1,94 +1,38 @@
 """
-worker.py — Background pipeline worker (Revamped for Phase 3).
+worker.py — Background pipeline worker (Revamped for Phase 3 + Wuzzuf Camoufox Scraping).
 
 New Architecture:
-  - Startup: SKIP scraping entirely. Serve jobs already in ChromaDB.
-  - Scrape 6 sources in PARALLEL via asyncio.gather (3× faster)
-  - Keyword pre-filter BEFORE LLM (drops ~85% of irrelevant listings)
-  - BATCH summarize: 3–5 jobs per LLM call (3× throughput, ~85% fewer calls)
-  - Purge stale jobs (> 14 days) on each run
-  - Refresh interval: 60 min (reduced from 30 to lower API load)
+  - Startup: SKIP scraping. Serve jobs already in ChromaDB.
+  - Scrape WUZZUF in parallel using AsyncCamoufox (stealth headless browser)
+  - Parameterize URL with user's selected career fields: https://wuzzuf.net/search/jobs?q={career_field}
+  - CSS Locator: Extract only the job cards text content to minimize Groq token usage
+  - Groq LLM (llama-3.1-8b-instant): Extract and structure job listings from the text directly
+  - Embed + store in ChromaDB with dedup and freshness factor
+  - Purge stale jobs (> 14 days)
 """
 
 import asyncio
 import traceback
 import json
 import re
+import urllib.parse
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Set
 
-from services.scraper import scrape_all_sources
-from services.job_summarizer import _client, _MODEL, _clean_json
+from camoufox.async_api import AsyncCamoufox
+from services.job_summarizer import _client
 from services.embeddings import embed_job
 from services.vector_store import add_job, get_job_count, delete_old_jobs, get_existing_job_ids, make_stable_id
 
 _is_running = False
 _last_run: datetime | None = None
-_INTERVAL_MINUTES = 60          # ← Changed from 30 to 60
+_INTERVAL_MINUTES = 60
 _last_known_profile = None
 
 
 # ──────────────────────────────────────────────────────────────────────
-# STEP 1: Keyword pre-filter — drops irrelevant jobs before LLM
+# helper for logo emojis
 # ──────────────────────────────────────────────────────────────────────
-
-def _relevance_score(raw: dict, profile) -> float:
-    """
-    Scores a raw scraped job against the user's skills + careerFields.
-    Returns a float 0.0–1.0. Jobs below threshold are skipped (no LLM call).
-    """
-    if profile is None:
-        return 1.0  # No profile → keep everything
-
-    keywords = set()
-    for skill in getattr(profile, "skills", []):
-        keywords.update(skill.lower().split())
-    for field in getattr(profile, "careerFields", []):
-        keywords.update(field.lower().split())
-
-    if not keywords:
-        return 1.0  # No keywords → keep everything
-
-    # Check against title + first 200 chars of raw text
-    text = (
-        f"{raw.get('title', '')} {raw.get('raw_text', '')[:200]}"
-    ).lower()
-
-    matches = sum(1 for kw in keywords if kw in text and len(kw) > 2)
-    return matches / max(len(keywords), 1)
-
-
-_RELEVANCE_THRESHOLD = 0.05  # Keep jobs with ≥ 5% keyword overlap
-
-
-# ──────────────────────────────────────────────────────────────────────
-# STEP 2: Batch summarization — 3–5 jobs per LLM call
-# ──────────────────────────────────────────────────────────────────────
-
-_BATCH_SYSTEM_PROMPT = """You are a job listing analyst for a mobile swipe-based job app.
-Analyze the provided job listings and return ONLY a valid JSON ARRAY where each element has:
-{
-  "title": "Clean job title",
-  "company": "Company name",
-  "location": "City, Country or Remote",
-  "workMode": "Remote or Hybrid or Onsite",
-  "industry": "Industry type",
-  "careerField": "Must be exactly one of: Technology, Engineering, Medical & Health, Business & Finance, Art & Design, Media & Communication, Education, Legal & Law, Science & Research, Skilled Trades, Hospitality & Tourism, Social & Community",
-  "specialization": "A specific 1-3 word job specialization. Do NOT use slashes (/). Use '&' or '-' instead (e.g., 'AI & ML Engineer', 'QA & Test Engineer', 'UI & UX Designer', 'Web Developer - Backend', 'IT Support & Systems Admin')",
-  "requiredSkills": ["skill1", "skill2", "skill3"],
-  "summaryBullets": ["Key point 1", "Key point 2", "Key point 3"],
-  "vibeTag": "Short phrase like: Fast-paced Startup or Global Tech Giant",
-  "minSalary": 0,
-  "maxSalary": 0,
-  "description": "One paragraph description",
-  "jobType": "Full-Time or Part-Time or Contract or Internship"
-}
-Rules:
-- Return ONLY a valid JSON array. No markdown, no explanation, no code fences.
-- Use double quotes for all strings. No trailing commas.
-- Array length must exactly match the number of input listings.
-- All fields are required. Use empty string or 0 if unknown."""
-
 
 def _get_logo_emoji(industry: str) -> str:
     industry = industry.lower()
@@ -106,63 +50,138 @@ def _get_logo_emoji(industry: str) -> str:
     return "🏢"
 
 
-async def _batch_summarize(raw_jobs: List[dict]) -> List[dict]:
-    """
-    Sends a batch of 3–5 job listings to the LLM in a single call.
-    Returns a list of structured job dicts (or empty list on failure).
-    """
-    numbered = "\n\n".join(
-        f"--- Listing {i+1} ---\n{raw.get('raw_text', '')[:2000]}"
-        for i, raw in enumerate(raw_jobs)
-    )
+# ──────────────────────────────────────────────────────────────────────
+# Step 1: Groq llama-3.1-8b-instant extractor & summarizer
+# ──────────────────────────────────────────────────────────────────────
 
+async def extract_jobs_from_text(text: str, career_field: str) -> List[dict]:
+    if not text.strip():
+        return []
+
+    prompt = f"""You are an expert job listing extraction assistant.
+Analyze the following text extracted from a job search results page (Wuzzuf) and extract the job listings.
+Extract up to 5 job listings, prioritizing ones that are relevant to the career field '{career_field}'.
+
+Return ONLY a valid JSON array of objects matching this exact schema:
+[
+  {{
+    "title": "Clean job title",
+    "company": "Company name",
+    "location": "City, Country or Remote (e.g. Cairo, Egypt or Remote)",
+    "workMode": "Remote or Hybrid or Onsite",
+    "industry": "Industry type",
+    "careerField": "{career_field}",
+    "specialization": "A specific 1-3 word job specialization. Do NOT use slashes (/). Use '&' or '-' instead (e.g., 'Backend Developer', 'Frontend Developer', 'UX Designer', 'Mobile Developer')",
+    "requiredSkills": ["skill1", "skill2"],
+    "summaryBullets": ["Key point 1", "Key point 2", "Key point 3"],
+    "vibeTag": "Short phrase like: Fast-paced Startup or Global Tech Giant",
+    "minSalary": 0,
+    "maxSalary": 0,
+    "description": "One paragraph description summarizing the job based on the listing details",
+    "jobType": "Full-Time or Part-Time or Contract or Internship"
+  }}
+]
+
+Rules:
+- Return ONLY the JSON array. Do NOT wrap it in markdown code blocks like ```json ... ```. No explanation, no intro, no outro.
+- If no jobs are found in the text, return an empty array [].
+- All fields are required. Use empty string or 0 if unknown.
+"""
     try:
         response = await _client.chat.completions.create(
-            model=_MODEL,
+            model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": _BATCH_SYSTEM_PROMPT},
-                {"role": "user", "content": f"Analyze these {len(raw_jobs)} job listings:\n{numbered}"},
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": f"Extracted Text:\n{text[:15000]}"}
             ],
             temperature=0.2,
-            max_tokens=len(raw_jobs) * 600,  # ~600 tokens per job
+            max_tokens=2500,
         )
 
-        raw = response.choices[0].message.content or ""
+        raw_response = response.choices[0].message.content or ""
 
-        # Strip </think> reasoning wrappers
-        if "</think>" in raw:
-            raw = raw.split("</think>")[-1]
+        # Clean and parse JSON
+        raw_response = raw_response.strip()
+        if "</think>" in raw_response:
+            raw_response = raw_response.split("</think>")[-1].strip()
 
-        # Strip markdown code fences
-        if "```" in raw:
-            parts = raw.split("```")
+        if "```" in raw_response:
+            parts = raw_response.split("```")
             for part in parts:
                 part = part.strip()
                 if part.startswith("json"):
                     part = part[4:]
                 if part.startswith("["):
-                    raw = part
+                    raw_response = part
                     break
 
-        raw = raw.strip()
-        # Extract outermost [ ] array
-        start = raw.find("[")
-        end = raw.rfind("]")
+        raw_response = raw_response.strip()
+        start = raw_response.find("[")
+        end = raw_response.rfind("]")
         if start != -1 and end != -1:
-            raw = raw[start:end + 1]
+            raw_response = raw_response[start:end + 1]
 
-        # Remove trailing commas
-        raw = re.sub(r",\s*([\]}])", r"\1", raw)
+        raw_response = re.sub(r",\s*([\]}])", r"\1", raw_response)
 
-        parsed = json.loads(raw)
-        if not isinstance(parsed, list):
+        jobs = json.loads(raw_response)
+        if not isinstance(jobs, list):
             return []
 
-        return parsed
-
+        print(f"📊 [Groq] Extracted {len(jobs)} jobs for career field '{career_field}'")
+        return jobs
     except Exception as e:
-        print(f"  ⚠️  Batch summarize failed ({len(raw_jobs)} jobs): {e}")
+        print(f"❌ [Groq] Extraction failed for '{career_field}': {e}")
         return []
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Step 2: Parallel Camoufox scraper targeting Wuzzuf
+# ──────────────────────────────────────────────────────────────────────
+
+async def scrape_all_fields_wuzzuf(fields: List[str]) -> List[dict]:
+    all_jobs = []
+    print(f"🕵️‍♂️ [Camoufox] Launching single stealth browser to scrape fields: {fields}")
+    try:
+        async with AsyncCamoufox(headless=True) as browser:
+            async def process_field_in_page(field: str) -> List[dict]:
+                encoded_field = urllib.parse.quote(field)
+                url = f"https://wuzzuf.net/search/jobs?q={encoded_field}"
+                page = await browser.new_page()
+                try:
+                    await page.set_viewport_size({"width": 1280, "height": 800})
+                    await page.goto(url, wait_until="networkidle", timeout=30000)
+
+                    # Wait for any job card container to load
+                    try:
+                        await page.wait_for_selector("div.css-1gatmva, [class*='css-1gatmva']", timeout=5000)
+                    except Exception:
+                        await asyncio.sleep(2)
+
+                    # Use CSS Locator to extract only the job cards text content
+                    card_locators = await page.locator("div.css-1gatmva, [class*='css-1gatmva'], div.css-la3ug8, [class*='css-la3ug8']").all()
+                    if card_locators:
+                        print(f"    [Camoufox] Found {len(card_locators)} job cards for '{field}'")
+                        text_content = "\n---\n".join([await card.inner_text() for card in card_locators[:10]])
+                    else:
+                        print(f"    [Camoufox] Job cards selector not found for '{field}'. Extracting first layout container...")
+                        text_content = await page.locator(".css-96695u, .css-la3ug8, body").first.inner_text()
+                        text_content = text_content[:15000]
+
+                    extracted_jobs = await extract_jobs_from_text(text_content, field)
+                    return extracted_jobs
+                except Exception as e:
+                    print(f"⚠️ Error scraping '{url}': {e}")
+                    return []
+                finally:
+                    await page.close()
+
+            tasks = [process_field_in_page(field) for field in fields]
+            results = await asyncio.gather(*tasks)
+            for res in results:
+                all_jobs.extend(res)
+    except Exception as e:
+        print(f"❌ [Camoufox] Browser failed: {e}")
+    return all_jobs
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -171,7 +190,7 @@ async def _batch_summarize(raw_jobs: List[dict]) -> List[dict]:
 
 async def run_ingestion_pipeline(profile=None) -> dict:
     """
-    Full pipeline: Parallel Scrape → Pre-filter → Batch Summarize → Embed → Store → Purge.
+    Full pipeline: Parallel Camoufox Scrape → Locator Inner Text Extract → Groq Summarize → Embed → Store → Purge.
     """
     global _is_running, _last_run, _last_known_profile
 
@@ -183,88 +202,65 @@ async def run_ingestion_pipeline(profile=None) -> dict:
         return {"status": "already_running", "message": "Pipeline is already running."}
 
     _is_running = True
-    stats = {"scraped": 0, "filtered": 0, "processed": 0, "failed": 0, "purged": 0, "job_count": 0}
+    stats = {"scraped": 0, "processed": 0, "failed": 0, "purged": 0, "job_count": 0}
 
     try:
         print(f"\n{'='*55}")
-        print(f"🚀 RAG Ingestion starting at {datetime.now().strftime('%H:%M:%S')}")
+        print(f"🚀 Wuzzuf Camoufox Ingestion starting at {datetime.now().strftime('%H:%M:%S')}")
         print(f"{'='*55}")
 
-        # ── Step 1: Scrape all 6 sources in PARALLEL ────────────────
-        print("📡 Scraping all sources in parallel...")
-        raw_jobs = await scrape_all_sources(profile=active_profile)
+        # Determine target career fields
+        fields = []
+        if active_profile and hasattr(active_profile, "careerFields") and active_profile.careerFields:
+            fields = list(active_profile.careerFields)
+        else:
+            # Default fallback career fields
+            fields = ["Technology", "Engineering", "Business & Finance"]
+
+        # Step 1: Scrape in Parallel using Camoufox & Groq
+        raw_jobs = await scrape_all_fields_wuzzuf(fields)
         stats["scraped"] = len(raw_jobs)
-        print(f"  ✓ Scraped {len(raw_jobs)} raw listings")
+        print(f"  ✓ Scraped and extracted {len(raw_jobs)} job listings from Wuzzuf")
 
-        # ── Step 2: Keyword pre-filter ───────────────────────────────
-        filtered = [
-            raw for raw in raw_jobs
-            if _relevance_score(raw, active_profile) >= _RELEVANCE_THRESHOLD
-        ]
-        stats["filtered"] = len(filtered)
-        dropped = len(raw_jobs) - len(filtered)
-        print(f"  ✓ Kept {len(filtered)} after keyword filter (dropped {dropped} irrelevant)")
-
-        if not filtered:
-            print("  ℹ️  No jobs passed the relevance filter. Done.")
+        if not raw_jobs:
+            print("  ℹ️ No jobs scraped. Ingestion complete.")
             stats["job_count"] = get_job_count()
             return stats
 
-        # ── Step 2.5: Dedup against existing ChromaDB ───────────────
+        # Step 2: Dedup against existing ChromaDB
         existing_ids = get_existing_job_ids()
-        new_only = [
-            raw for raw in filtered
-            if make_stable_id(raw.get("title", ""), raw.get("company", "")) not in existing_ids
-        ]
-        stats["skipped_existing"] = len(filtered) - len(new_only)
+        new_only = []
+        for job in raw_jobs:
+            title = job.get("title", "")
+            company = job.get("company", "")
+            job_id = make_stable_id(title, company)
+            if job_id not in existing_ids:
+                job["id"] = job_id
+                new_only.append(job)
+
+        stats["skipped_existing"] = len(raw_jobs) - len(new_only)
         print(f"  ⏩ Skipped {stats['skipped_existing']} jobs already in DB ({len(new_only)} truly new)")
 
         if not new_only:
-            print("  ℹ️  All scraped jobs already stored. No LLM calls needed.")
+            print("  ℹ️ All scraped jobs already stored. Done.")
             stats["job_count"] = get_job_count()
             return stats
 
-        # ── Step 3: Batch summarize (3–5 jobs per LLM call) ─────────
-        BATCH_SIZE = 4
-        batches = [new_only[i:i + BATCH_SIZE] for i in range(0, len(new_only), BATCH_SIZE)]
-        print(f"  📦 Batching {len(new_only)} new jobs into {len(batches)} LLM calls (batch size {BATCH_SIZE})...")
-
-
-        all_summaries = []
-        all_raws_matched = []
-
-        for b_idx, batch in enumerate(batches):
-            print(f"  [{b_idx+1}/{len(batches)}] Summarizing batch of {len(batch)} jobs...")
-            summaries = await _batch_summarize(batch)
-
-            if len(summaries) == len(batch):
-                all_summaries.extend(summaries)
-                all_raws_matched.extend(batch)
-                print(f"    ✓ Got {len(summaries)} summaries")
-            else:
-                stats["failed"] += len(batch)
-                print(f"    ⚠️  Batch returned {len(summaries)} instead of {len(batch)} — skipping batch")
-
-        # ── Step 4: Embed + Store in ChromaDB ───────────────────────
-        for i, (job_data, raw) in enumerate(zip(all_summaries, all_raws_matched)):
+        # Step 3: Embed + Store in ChromaDB
+        for i, job_data in enumerate(new_only):
             try:
-                job_data.setdefault("id", raw.get("id", ""))
-                job_data.setdefault("postedDate", raw.get("posted_date", ""))
-                if not job_data.get("company"):
-                    job_data["company"] = raw.get("company", "Unknown")
-                if not job_data.get("imageUrl"):
-                    job_data["imageUrl"] = raw.get("image_url", "")
-                job_data["imageUrl"] = ""  # Ignore images for now
+                job_data.setdefault("postedDate", datetime.now().strftime("%Y-%m-%d"))
                 job_data["logoEmoji"] = _get_logo_emoji(job_data.get("industry", ""))
+                job_data["imageUrl"] = ""
 
                 embedding = embed_job(job_data)
                 add_job(job_data, embedding)
                 stats["processed"] += 1
             except Exception as e:
                 stats["failed"] += 1
-                print(f"  ⚠️  Embed/store failed for job {i+1}: {e}")
+                print(f"  ⚠️ Embed/store failed for job {i+1}: {e}")
 
-        # ── Step 5: Purge stale jobs (> 14 days) ────────────────────
+        # Step 4: Purge stale jobs (> 14 days)
         purged = delete_old_jobs(older_than_days=14)
         stats["purged"] = purged
 
@@ -272,8 +268,8 @@ async def run_ingestion_pipeline(profile=None) -> dict:
         _last_run = datetime.now()
 
         print(f"\n✅ Ingestion complete:")
-        print(f"   Scraped: {stats['scraped']} | Filtered: {stats['filtered']} | "
-              f"Processed: {stats['processed']} | Failed: {stats['failed']} | Purged: {stats['purged']}")
+        print(f"   Scraped: {stats['scraped']} | Processed: {stats['processed']} | "
+              f"Failed: {stats['failed']} | Purged: {stats['purged']}")
         print(f"   Total jobs in DB: {stats['job_count']}")
 
     except Exception as e:
@@ -290,13 +286,12 @@ async def start_background_worker():
     Recurring background worker.
     Starts with a check to see if an immediate initial run is needed.
     """
-    # If the database is empty, trigger an immediate run in the background
     if get_job_count() == 0:
         print("⚡ Database is empty. Starting immediate initial ingestion...")
         asyncio.create_task(run_ingestion_pipeline())
-    
+
     print(f"⏳ Background worker scheduled — next refresh in {_INTERVAL_MINUTES} min...")
-    await asyncio.sleep(_INTERVAL_MINUTES * 60)  # Wait before next background run
+    await asyncio.sleep(_INTERVAL_MINUTES * 60)
     while True:
         try:
             await run_ingestion_pipeline()
@@ -313,3 +308,4 @@ def get_worker_status() -> dict:
         "interval_minutes": _INTERVAL_MINUTES,
         "job_count":  get_job_count(),
     }
+

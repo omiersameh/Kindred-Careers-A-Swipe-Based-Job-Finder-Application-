@@ -4,6 +4,8 @@ import '../models/job.dart';
 import '../models/user_profile.dart';
 import '../models/swipe_action.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 // ============================================================
 // SERVICE: JobRecommendationService (Phase 3 — RAG Backend)
 //
@@ -15,7 +17,11 @@ import '../models/swipe_action.dart';
 // ============================================================
 
 class JobRecommendationService {
-  static const String _baseUrl = 'http://192.168.100.12:8000'; // PC's actual IP
+  static String get _baseUrl {
+    final apiUrl = dotenv.env['API_URL'] ?? 'http://10.0.2.2:8000/api/generate-cv';
+    final uri = Uri.parse(apiUrl);
+    return '${uri.scheme}://${uri.host}:${uri.port}';
+  }
   static const int _bufferMinSize = 30;
   static const int _fetchCount = 40;
 

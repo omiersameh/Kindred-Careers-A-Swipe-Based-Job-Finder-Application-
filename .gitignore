@@ -98,3 +98,7 @@ backend/__pycache__/
 *.pdf
 firebase-debug.log
 firestore-debug.log
+backend/.venv/
+**/.venv/
+**/__pycache__/
+.agent/

@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    shm_size: '2gb'
+    volumes:
+      - ./backend/chroma_db:/app/chroma_db
+    env_file:
+      - ./backend/.env
+    restart: always

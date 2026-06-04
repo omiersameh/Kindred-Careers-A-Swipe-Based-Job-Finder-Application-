@@ -15,6 +15,7 @@ from services.cv_generator import generate_tailored_cv, regenerate_tailored_cv
 from services.cv_pdf_generator import generate_cv_pdf
 from services.embeddings import embed_profile
 from services.vector_store import search_jobs, get_job_count
+from services.mock_jobs import get_mock_jobs
 from worker import run_ingestion_pipeline, start_background_worker, get_worker_status
 
 
@@ -96,30 +97,41 @@ async def get_job_feed(req: FeedRequest):
     """
     Returns personalized job recommendations from the ChromaDB vector store.
     Embeds the user profile → similarity search → returns ranked jobs.
+    If database is empty, returns mock jobs.
+    If all database jobs are seen/excluded, returns the most recent database jobs as fallback.
     """
     try:
+        # Fallback if DB is empty
         if get_job_count() == 0:
-            raise HTTPException(
-                status_code=503,
-                detail="Job database is empty. Call POST /api/jobs/ingest first."
-            )
+            print("⚠️ ChromaDB is empty. Returning personalized mock jobs...")
+            return get_mock_jobs(req.user_profile)
+
         profile_vector = embed_profile(req.user_profile)
         jobs = search_jobs(
             profile_vector=profile_vector,
             n=req.n,
             exclude_ids=req.exclude_ids,
         )
-        # Return 503 when all available jobs are excluded (user has seen everything)
+
+        # Fallback if all database jobs are excluded (user has seen everything)
+        # We relax the exclude_ids constraint to return recent database jobs instead of blocking
         if not jobs:
-            raise HTTPException(
-                status_code=503,
-                detail="No new jobs available. Check back later after the next scrape."
+            print("⚠️ All jobs excluded. Returning database jobs without exclusion filter...")
+            jobs = search_jobs(
+                profile_vector=profile_vector,
+                n=req.n,
+                exclude_ids=None,
             )
+
+        # If it's still empty (should not happen since get_job_count > 0, but just in case)
+        if not jobs:
+            return get_mock_jobs(req.user_profile)
+
         return jobs
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Fallback to mock jobs on any unexpected error to prevent blocking onboarding
+        print(f"⚠️ Error in get_job_feed: {e}. Falling back to mock jobs...")
+        return get_mock_jobs(req.user_profile)
 
 
 @app.post("/api/jobs/ingest")
