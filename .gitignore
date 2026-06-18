@@ -102,3 +102,12 @@ backend/.venv/
 **/.venv/
 **/__pycache__/
 .agent/
+
+# LaTeX temporary files
+*.aux
+*.out
+*.toc
+*.lof
+*.lot
+*.synctex*
+

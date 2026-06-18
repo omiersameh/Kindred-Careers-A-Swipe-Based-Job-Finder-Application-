@@ -1,10 +1,14 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import asyncio
 import io
+import os
+import threading
+import time
+from datetime import datetime, timedelta
 
 from models.user_profile import UserProfile
 from models.job import Job, SwipeAction
@@ -16,13 +20,14 @@ from services.cv_pdf_generator import generate_cv_pdf
 from services.embeddings import embed_profile
 from services.vector_store import search_jobs, get_job_count
 from services.mock_jobs import get_mock_jobs
+from services import swipe_store
 from worker import run_ingestion_pipeline, start_background_worker, get_worker_status
 
 
 app = FastAPI(
     title="Kindred Careers API",
     description="Backend for RAG job matching and AI-powered CV generation",
-    version="2.0.0"
+    version="2.1.0"
 )
 
 app.add_middleware(
@@ -37,13 +42,72 @@ app.add_middleware(
 @app.on_event("startup")
 async def on_startup():
     job_count = get_job_count()
-    print(f"🚀 Kindred Careers API v2.0 starting up... (ChromaDB has {job_count} jobs)")
+    print(f"🚀 Kindred Careers API v2.1 starting up... (ChromaDB has {job_count} jobs)")
     if job_count > 0:
         print("✅ Fast path: serving from existing ChromaDB — skipping startup scrape.")
     else:
         print("⚠️  ChromaDB is empty. Triggering initial ingest in background...")
     # Always start the background refresh worker (first run delayed by _INTERVAL_MINUTES)
     asyncio.create_task(start_background_worker())
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Rate Limiter (env-gated, in-memory, zero-dependency)
+# Activated ONLY when ENABLE_RATE_LIMIT=true in the .env file.
+# Default: ENABLE_RATE_LIMIT=False — fully disabled for stress testing.
+#
+# Quota: 30 jobs served per user per 5-hour rolling window.
+# Counts ALL jobs returned in feed responses regardless of swipe direction.
+# ──────────────────────────────────────────────────────────────────────
+
+_RATE_LIMIT_ENABLED: bool = os.getenv("ENABLE_RATE_LIMIT", "False").lower() == "true"
+_RATE_LIMIT_MAX_JOBS: int = 30
+_RATE_LIMIT_WINDOW_SECONDS: int = 5 * 60 * 60  # 5 hours
+
+# {user_id: {"count": int, "window_start": float}}
+_rate_limit_state: dict[str, dict] = {}
+
+# ──────────────────────────────────────────────────────────────────────
+# Auto-Ingestion Trigger (low-watermark guard)
+# When a user's unviewed job count drops below this threshold, the
+# scraping pipeline is queued in the background.
+# A threading.Lock prevents multiple simultaneous Camoufox launches.
+# ──────────────────────────────────────────────────────────────────────
+
+_LOW_WATERMARK_THRESHOLD: int = 15
+_scrape_lock = threading.Lock()
+_is_scraping_active: bool = False
+
+
+def _check_rate_limit(user_id: str, jobs_to_serve: int) -> tuple[bool, int]:
+    """
+    Checks whether a user has exceeded the quota for this window.
+
+    Returns:
+        (allowed: bool, retry_after_seconds: int)
+    """
+    if not _RATE_LIMIT_ENABLED:
+        return True, 0
+
+    now = time.time()
+    state = _rate_limit_state.get(user_id)
+
+    if state is None or (now - state["window_start"]) >= _RATE_LIMIT_WINDOW_SECONDS:
+        # Fresh window
+        _rate_limit_state[user_id] = {"count": 0, "window_start": now}
+        state = _rate_limit_state[user_id]
+
+    remaining_quota = _RATE_LIMIT_MAX_JOBS - state["count"]
+
+    if remaining_quota <= 0:
+        retry_after = int(_RATE_LIMIT_WINDOW_SECONDS - (now - state["window_start"]))
+        return False, max(retry_after, 0)
+
+    # Record that we're about to serve jobs (count up to quota cap)
+    served = min(jobs_to_serve, remaining_quota)
+    state["count"] += served
+    return True, 0
+
 
 # ── Request Payloads ───────────────────────────────────────────
 
@@ -77,44 +141,139 @@ class CVPDFRequest(BaseModel):
 
 class FeedRequest(BaseModel):
     user_profile: UserProfile
+    user_id: str = ""             # Firebase UID — used for persistent swipe exclusion
     n: int = 30
-    exclude_ids: List[str] = []   # Job IDs already seen by this user
+    exclude_ids: List[str] = []   # Job IDs already seen by this client session
 
 class IngestRequest(BaseModel):
     """Optional profile body for the ingest endpoint to personalize scraping."""
     user_profile: Optional[UserProfile] = None
 
+class SwipeRecordRequest(BaseModel):
+    """Payload for recording a single swipe event."""
+    user_id: str                  # Firebase UID
+    job_id: str                   # Stable ChromaDB job ID
+    action: str = "skip"          # 'like', 'dislike', or 'skip'
+
+
 # ── Endpoints ─────────────────────────────────────────────────
 
 @app.get("/")
 def read_root():
-    return {"status": "ok", "message": "Kindred Careers API v2.0 - RAG Pipeline"}
+    return {"status": "ok", "message": "Kindred Careers API v2.1 - Stateful RAG Pipeline"}
 
-# ─── 🆕 Phase 3: RAG Job Feed ───────────────────────────────
+
+# ─── Swipe State Management ─────────────────────────────────
+
+@app.post("/api/swipes/record")
+def record_swipe(req: SwipeRecordRequest):
+    """
+    Records a single swipe action (like/dislike/skip) for a user-job pair.
+    These records are persisted in swipes.db and used to exclude already-seen
+    jobs from all future feed requests for this user.
+
+    Selection Logic:
+      1. Fetch all job_ids this user has already swiped → swiped_ids
+      2. Merge with client-side exclude_ids
+      3. Run vector similarity ONLY on the remaining unviewed jobs
+    """
+    if not req.user_id or not req.job_id:
+        raise HTTPException(status_code=422, detail="user_id and job_id are required")
+
+    swipe_store.record_swipe(
+        user_id=req.user_id,
+        job_id=req.job_id,
+        action=req.action,
+    )
+    return {"recorded": True, "user_id": req.user_id, "job_id": req.job_id, "action": req.action}
+
+
+@app.get("/api/swipes/{user_id}")
+def get_swipe_history(user_id: str, limit: int = 50):
+    """Returns recent swipe history for a user (for debugging/analytics)."""
+    history = swipe_store.get_swipe_history(user_id=user_id, limit=limit)
+    swiped_ids = swipe_store.get_swiped_ids(user_id=user_id)
+    return {
+        "user_id": user_id,
+        "total_swiped": len(swiped_ids),
+        "history": history,
+    }
+
+
+@app.delete("/api/swipes/{user_id}")
+def clear_swipe_history(user_id: str):
+    """
+    Deletes all swipe records for a user.
+    Intended for developer testing and DB stress-testing resets.
+    """
+    deleted = swipe_store.clear_swipes(user_id=user_id)
+    return {"cleared": True, "user_id": user_id, "records_deleted": deleted}
+
+
+# ─── 🆕 Phase 3: Stateful RAG Job Feed ──────────────────────
 
 @app.post("/api/jobs/feed", response_model=List[dict])
-async def get_job_feed(req: FeedRequest):
+async def get_job_feed(req: FeedRequest, background_tasks: BackgroundTasks):
     """
     Returns personalized job recommendations from the ChromaDB vector store.
-    Embeds the user profile → similarity search → returns ranked jobs.
-    If database is empty, returns mock jobs.
-    If all database jobs are seen/excluded, returns the most recent database jobs as fallback.
+
+    Stateful Unviewed-Only Feeding Logic:
+      1. Identify all job_ids the active user has already swiped (from swipes.db).
+      2. Merge with client-side exclude_ids (current session state).
+      3. Run vector similarity search ONLY on the remaining unviewed jobs.
+      4. Return the next highest similarity matches.
+
+    Auto-Ingestion Trigger:
+      After retrieval, if the number of unviewed jobs returned drops below
+      _LOW_WATERMARK_THRESHOLD (15), queue a background scrape using the
+      user's careerFields. A threading.Lock prevents concurrent launches.
+
+    This ensures a user NEVER sees a job twice, even if it has a 95% match rate.
+    Rate limiting is applied AFTER retrieval if ENABLE_RATE_LIMIT=true.
     """
+    global _is_scraping_active
+
     try:
         # Fallback if DB is empty
         if get_job_count() == 0:
             print("⚠️ ChromaDB is empty. Returning personalized mock jobs...")
             return get_mock_jobs(req.user_profile)
 
+        # ── Step 1: Build complete exclusion set (server-side + client-side) ──
+        server_swiped_ids = set()
+        if req.user_id:
+            server_swiped_ids = swipe_store.get_swiped_ids(user_id=req.user_id)
+            print(f"🔒 [Feed] User '{req.user_id}' has swiped {len(server_swiped_ids)} jobs in DB")
+
+        combined_exclude = server_swiped_ids | set(req.exclude_ids)
+        print(f"📋 [Feed] Total excluded: {len(combined_exclude)} jobs "
+              f"(server: {len(server_swiped_ids)}, client: {len(req.exclude_ids)})")
+
+        # ── Step 2: Embed profile + vector similarity on unviewed jobs ONLY ──
         profile_vector = embed_profile(req.user_profile)
         jobs = search_jobs(
             profile_vector=profile_vector,
             n=req.n,
-            exclude_ids=req.exclude_ids,
+            exclude_ids=list(combined_exclude),
         )
 
-        # Fallback if all database jobs are excluded (user has seen everything)
-        # We relax the exclude_ids constraint to return recent database jobs instead of blocking
+        # ── Step 3: Low-watermark auto-ingestion trigger ──────────────────
+        #    Count unviewed jobs returned. If below threshold, queue a scrape.
+        unviewed_count = len(jobs) if jobs else 0
+        if unviewed_count < _LOW_WATERMARK_THRESHOLD:
+            print(f"📉 [Feed] Low watermark hit: {unviewed_count} unviewed jobs "
+                  f"(threshold: {_LOW_WATERMARK_THRESHOLD}). Checking scrape lock...")
+            with _scrape_lock:
+                if not _is_scraping_active:
+                    _is_scraping_active = True
+                    print("🚀 [Feed] Queueing background ingestion pipeline...")
+                    background_tasks.add_task(
+                        _guarded_ingestion, req.user_profile
+                    )
+                else:
+                    print("🔒 [Feed] Scrape already in progress — skipping duplicate trigger.")
+
+        # ── Step 4: Fallback — all jobs excluded (user has seen everything) ──
         if not jobs:
             print("⚠️ All jobs excluded. Returning database jobs without exclusion filter...")
             jobs = search_jobs(
@@ -123,15 +282,51 @@ async def get_job_feed(req: FeedRequest):
                 exclude_ids=None,
             )
 
-        # If it's still empty (should not happen since get_job_count > 0, but just in case)
         if not jobs:
             return get_mock_jobs(req.user_profile)
 
+        # ── Step 5: Apply rate limiter (if enabled via ENABLE_RATE_LIMIT=true) ──
+        if _RATE_LIMIT_ENABLED and req.user_id:
+            allowed, retry_after = _check_rate_limit(req.user_id, len(jobs))
+            if not allowed:
+                print(f"🚫 [RateLimit] User '{req.user_id}' exceeded quota. "
+                      f"Retry after {retry_after}s")
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "detail": "Rate limit exceeded. You have viewed the maximum "
+                                  f"of {_RATE_LIMIT_MAX_JOBS} jobs in the last 5 hours.",
+                        "retry_after_seconds": retry_after,
+                    },
+                    headers={"Retry-After": str(retry_after)},
+                )
+            # Count jobs served toward quota
+            _check_rate_limit(req.user_id, 0)  # already counted above in allowed path
+
         return jobs
+
     except Exception as e:
-        # Fallback to mock jobs on any unexpected error to prevent blocking onboarding
         print(f"⚠️ Error in get_job_feed: {e}. Falling back to mock jobs...")
         return get_mock_jobs(req.user_profile)
+
+
+async def _guarded_ingestion(profile=None):
+    """
+    Wrapper that runs run_ingestion_pipeline and guarantees the
+    _is_scraping_active flag is released when the pipeline finishes
+    (whether it succeeds or crashes).
+    """
+    global _is_scraping_active
+    try:
+        print("🔧 [AutoIngest] Background ingestion pipeline started.")
+        await run_ingestion_pipeline(profile)
+        print("✅ [AutoIngest] Background ingestion pipeline completed.")
+    except Exception as e:
+        print(f"❌ [AutoIngest] Pipeline failed: {e}")
+    finally:
+        with _scrape_lock:
+            _is_scraping_active = False
+            print("🔓 [AutoIngest] Scrape lock released.")
 
 
 @app.post("/api/jobs/ingest")
@@ -140,21 +335,33 @@ async def ingest_jobs(req: IngestRequest = None, background_tasks: BackgroundTas
     Manually triggers the scrape → summarize → embed → store pipeline.
     Accepts an optional user_profile to drive personalized job searches.
     Returns immediately; the pipeline runs in the background.
+
+    Ingestion Scale (v2.1):
+      - Target: 60 job listings per run via paginated Wuzzuf scraping
+      - Worker: 12 Groq summarizer calls × 5 jobs each = 60-job pool
     """
     profile = req.user_profile if req else None
     background_tasks.add_task(run_ingestion_pipeline, profile)
     return {
         "status": "started",
-        "message": "Ingestion pipeline started with profile-driven search. Check server logs for progress.",
+        "message": "Ingestion pipeline started (60-job target, 12 Groq calls). Check logs.",
         "personalized": profile is not None,
-        "current_job_count": get_job_count()
+        "current_job_count": get_job_count(),
+        "rate_limit_enabled": _RATE_LIMIT_ENABLED,
     }
 
 
 @app.get("/api/jobs/status")
 def worker_status():
     """Returns current worker status and total number of jobs in DB."""
-    return get_worker_status()
+    status = get_worker_status()
+    status["rate_limit_enabled"] = _RATE_LIMIT_ENABLED
+    if _RATE_LIMIT_ENABLED:
+        status["rate_limit_config"] = {
+            "max_jobs": _RATE_LIMIT_MAX_JOBS,
+            "window_hours": 5,
+        }
+    return status
 
 
 # ─── Phase 2: CV Generation ─────────────────────────────────

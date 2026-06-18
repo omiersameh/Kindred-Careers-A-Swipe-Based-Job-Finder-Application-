@@ -1,5 +1,4 @@
-import 'dart:ui';
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,6 +15,13 @@ import '../widgets/job_card.dart';
 // ============================================================
 // SCREEN: HomeScreen — Browse (Main Swipe Screen)
 // Tinder-style swipe with gold glassmorphism design
+//
+// Queue Pagination (v2.1):
+//  • 60s periodic timer: fires every 60 seconds; triggers a background
+//    queue update ONLY if the user has actively swiped since the last fetch.
+//  • 5-swipe trigger: the service also self-triggers after every 5 swipes.
+//  • Append-only: new jobs are appended to the BOTTOM of _jobs list.
+//    The CardSwiper index is never reset — the current card is undisturbed.
 // ============================================================
 
 class HomeScreen extends StatefulWidget {
@@ -34,18 +40,42 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Job> _jobs = [];
   bool _isLoading = true;
 
+  // ── 60-second Queue Refresh Timer ─────────────────────────────────
+  Timer? _queueTimer;
+
   @override
   void initState() {
     super.initState();
+
+    // Register the append-only callback: called by the service when background
+    // queue updates return new jobs. Appends to BOTTOM of deck, never resets index.
+    _recService.setOnQueueUpdate(_onQueueUpdateReceived);
+
+    // Load initial job feed
     _loadJobs();
+
+    // ── Start 60-second periodic timer ────────────────────────────────
+    // On each tick: delegates to service which checks if user is active
+    // (has swiped at least once since last fetch) before fetching.
+    _queueTimer = Timer.periodic(
+      const Duration(seconds: 60),
+      (_) {
+        if (!mounted) return;
+        final profile = context.read<UserProfileService>().profile;
+        _recService.triggerTimedQueueUpdate(profile);
+      },
+    );
   }
 
   @override
   void dispose() {
+    _queueTimer?.cancel();
     _swiperController.dispose();
     _scrollOffset.dispose();
     super.dispose();
   }
+
+  // ─── Initial Load ────────────────────────────────────────────
 
   void _loadJobs() {
     setState(() => _isLoading = true);
@@ -67,18 +97,49 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // ─── Append-Only Queue Update Callback ───────────────────────
+  //
+  // This is the KEY zero-interruption mechanism:
+  //  • Called by JobRecommendationService when a background fetch completes.
+  //  • New jobs are appended to the END of _jobs (not inserted at index 0).
+  //  • CardSwiper's current card index is determined by what has already been
+  //    swiped away — appending to the tail never affects the active card.
+  //  • setState() rebuilds the card count but the swiper preserves its position.
+
+  void _onQueueUpdateReceived(List<Job> freshJobs) {
+    if (!mounted) return;
+    if (freshJobs.isEmpty) return;
+
+    setState(() {
+      // Only append jobs that are not already in the deck (dedup guard)
+      final existingIds = _jobs.map((j) => j.id).toSet();
+      final toAppend = freshJobs.where((j) => !existingIds.contains(j.id)).toList();
+      _jobs = [..._jobs, ...toAppend]; // APPEND to bottom — never prepend or replace
+      debugPrint('📥 [HomeScreen] Appended ${toAppend.length} jobs to deck bottom. '
+          'Total deck: ${_jobs.length}');
+    });
+  }
+
+  // ─── Deck End Handler ────────────────────────────────────────
+
   /// Called when CardSwiper reaches the last card (onEnd).
-  /// Tries to load a fresh batch from the backend. If none remain, shows empty state.
+  /// Only shows empty state if the feed is truly exhausted server-side.
   void _onDeckEnd() {
     final profile = context.read<UserProfileService>().profile;
     if (_recService.isFeedExhausted) {
-      // Backend told us there are no more unseen jobs
       setState(() {
         _jobs = [];
         _isLoading = false;
       });
       return;
     }
+    // Try to get any remaining buffer jobs (may have been appended already)
+    final buffered = _recService.getRecommendedJobs(profile);
+    if (buffered.isNotEmpty) {
+      setState(() => _jobs = buffered);
+      return;
+    }
+    // Trigger a fresh fetch; show loading until results arrive
     setState(() {
       _isLoading = true;
       _jobs = [];
@@ -93,30 +154,36 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  bool _onSwipe(
-      int previousIndex, int? currentIndex, CardSwiperDirection direction) {
+  // ─── Swipe Handlers ──────────────────────────────────────────
+
+  bool _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     if (previousIndex >= _jobs.length) return true;
     final job = _jobs[previousIndex];
     if (direction == CardSwiperDirection.right) {
       _handleSwipeRight(job);
-    } else if (direction == CardSwiperDirection.left) _handleSwipeLeft(job);
+    } else if (direction == CardSwiperDirection.left) {
+      _handleSwipeLeft(job);
+    }
     _scrollOffset.value = 0;
     return true;
   }
 
   void _handleSwipeLeft(Job job) {
-    _recService.recordSwipe(SwipeAction(
-      id: 'sw_${DateTime.now().millisecondsSinceEpoch}',
-      jobId: job.id,
-      jobTitle: job.title,
-      company: job.company,
-      direction: SwipeDirection.left,
-    ));
+    final profile = context.read<UserProfileService>().profile;
+    _recService.recordSwipe(
+      SwipeAction(
+        id: 'sw_${DateTime.now().millisecondsSinceEpoch}',
+        jobId: job.id,
+        jobTitle: job.title,
+        company: job.company,
+        direction: SwipeDirection.left,
+      ),
+      profile, // ← passed to trigger queue update checks
+    );
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(
-        content:
-            Text('👎  Passed on ${job.title}', style: GoogleFonts.outfit()),
+        content: Text('👎  Passed on ${job.title}', style: GoogleFonts.outfit()),
         backgroundColor: const Color(0xAAD32F2F),
         duration: const Duration(milliseconds: 1200),
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -124,13 +191,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleSwipeRight(Job job) async {
-    _recService.recordSwipe(SwipeAction(
-      id: 'sw_${DateTime.now().millisecondsSinceEpoch}',
-      jobId: job.id,
-      jobTitle: job.title,
-      company: job.company,
-      direction: SwipeDirection.right,
-    ));
+    final profile = context.read<UserProfileService>().profile;
+    _recService.recordSwipe(
+      SwipeAction(
+        id: 'sw_${DateTime.now().millisecondsSinceEpoch}',
+        jobId: job.id,
+        jobTitle: job.title,
+        company: job.company,
+        direction: SwipeDirection.right,
+      ),
+      profile, // ← passed to trigger queue update checks
+    );
 
     // ── Step 1: Save job to Matches immediately ─────────────────────
     final appState = context.read<AppState>();
@@ -158,7 +229,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // ── Step 2: Generate CV in background ──────────────────────────
-    final profile = context.read<UserProfileService>().profile;
     try {
       final cv = await _cvService.generateCV(job: job, profile: profile);
       if (mounted) {
@@ -190,6 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // ─── Build ───────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -260,8 +331,8 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: _swiperController,
             cardsCount: _jobs.length,
             onSwipe: _onSwipe,
-            onEnd: _onDeckEnd, // ← fires when last card is swiped
-            isLoop: false, // ← CRITICAL: prevents cycle
+            onEnd: _onDeckEnd,
+            isLoop: false, // CRITICAL: prevents cycle
             numberOfCardsDisplayed: _jobs.length < 3 ? _jobs.length : 3,
             backCardOffset: const Offset(0, -18),
             scale: 0.93,
@@ -297,7 +368,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-
   Widget _swipeOverlay(String icon, Color color, bool isRight) {
     return Positioned(
       top: 60,
@@ -309,11 +379,11 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             border: Border.all(color: color, width: 3),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.4),
+                color: color.withValues(alpha: 0.4),
                 blurRadius: 20,
                 spreadRadius: 8,
               )
@@ -325,10 +395,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 52,
                   fontWeight: FontWeight.w900,
                   shadows: [
-                    Shadow(color: color.withOpacity(0.8), blurRadius: 16)
+                    Shadow(color: color.withValues(alpha: 0.8), blurRadius: 16)
                   ])),
         ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-         .shimmer(duration: 1000.ms, color: Colors.white.withOpacity(0.3)),
+         .shimmer(duration: 1000.ms, color: Colors.white.withValues(alpha: 0.3)),
       ),
     );
   }
@@ -363,7 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
               gradient: kGoldGradient,
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
-                BoxShadow(color: kGold.withOpacity(0.3), blurRadius: 16)
+                BoxShadow(color: kGold.withValues(alpha: 0.3), blurRadius: 16)
               ],
             ),
             child: Text('Refresh Feed',

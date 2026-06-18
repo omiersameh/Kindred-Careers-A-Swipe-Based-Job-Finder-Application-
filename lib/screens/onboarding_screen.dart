@@ -198,7 +198,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       color: page.glowColor.withOpacity(0.15),
                       blurRadius: 40,
                       spreadRadius: 10,
-                    )
+                    ),
+                    BoxShadow(
+                      color: kGold.withOpacity(0.25),
+                      blurRadius: 25,
+                      spreadRadius: 2,
+                    ),
                   ],
                 ),
                 child: Center(

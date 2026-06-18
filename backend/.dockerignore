@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────────────
+# .dockerignore — Backend Docker build exclusions
+# Protects local Docker layer cache (quota-safe architecture)
+# ─────────────────────────────────────────────────────────────────────────
+
+# Local virtual environments — never ship pip deps inside source copy
+.venv/
+venv/
+env/
+
+# Python bytecode — regenerated at runtime
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local ChromaDB vector database state — mounted as a volume in production
+# (docker-compose.yml: ./backend/chroma_db:/app/chroma_db)
+chroma_db/
+
+# SQLite swipe persistence file — local dev state, NOT for Docker images.
+# In production, mount this as a persistent volume or use a hosted DB.
+swipes.db
+
+# Local development environment files
+.env.local
+.env.development
+
+# Log files and crash reports
+*.log
+error_logs/
+
+# IDE and editor artifacts
+.vscode/
+.idea/
+*.iml
+
+# Temporary and test files
+*.tmp
+*.bak
+test_*.py
+
+# Cached pip wheel files
+*.whl
+pip_cache/
+
+# OS artifacts
+.DS_Store
+Thumbs.db

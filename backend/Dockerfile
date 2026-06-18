@@ -42,10 +42,11 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt
 
 # Automated fallback to ensure all required browser dependencies are installed
-RUN python -m playwright install-deps
+# RUN python -m playwright install-deps
 
 # Pre-download the embedding model for offline availability
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
