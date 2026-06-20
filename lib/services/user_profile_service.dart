@@ -146,6 +146,8 @@ class UserProfileService extends ChangeNotifier {
       bio: '',
       location: '',
       skills: [],
+      specializations: {},
+      credentials: [],
       careerFields: [],
       preferredIndustries: [],
       preferredWorkMode: 'Hybrid',

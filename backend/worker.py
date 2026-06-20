@@ -79,95 +79,76 @@ def _get_logo_emoji(industry: str) -> str:
 #   Fallback: careerFields → static defaults
 # ──────────────────────────────────────────────────────────────────────
 
-def _build_search_queries(profile=None) -> List[Tuple[str, int]]:
+def _build_search_queries(profile=None) -> List[Tuple[str, int, str]]:
     """
-    Returns a list of (search_query, num_pages) tuples that sum to
+    Returns a list of (search_query, num_pages, fallback_query) tuples that sum to
     _TARGET_GROQ_CALLS total pages (12).
 
-    Role-First allocation:
-      - 7 pages for the primary job title from recent experience
-      - 3 pages for the #1 specific skill
-      - 2 pages for the #2 specific skill
-
-    Falls back through: experiences → skills → careerFields → defaults.
+    Specialty-First Priority Matrix:
+      - Primary Field Allocation (7 pages): Distribute across the user's selected specializations for their first career field.
+      - Secondary Field Allocation (5 pages): Distribute across the user's selected specializations for their second career field (if any).
+      - If only one field is selected, distribute all 12 pages across its specializations.
+      - Fallback: The exact parent field of the specialization.
     """
-    queries: List[Tuple[str, int]] = []
+    queries: List[Tuple[str, int, str]] = []
 
-    primary_title: Optional[str] = None
-    top_skills: List[str] = []
-    career_fields: List[str] = []
+    if profile and hasattr(profile, "specializations") and profile.specializations:
+        fields = list(profile.specializations.keys())
 
-    if profile is not None:
-        # Extract career fields
-        if hasattr(profile, "careerFields") and profile.careerFields:
-            career_fields = list(profile.careerFields)
+        def distribute(specs: List[str], total_pages: int, parent_field: str):
+            if not specs:
+                return []
+            base = total_pages // len(specs)
+            remainder = total_pages % len(specs)
+            res = []
+            for i, spec in enumerate(specs):
+                pages = base + (1 if i < remainder else 0)
+                if pages > 0:
+                    res.append((spec, pages, parent_field))
+            return res
 
-        # Extract most recent job title from experiences
-        if hasattr(profile, "experiences") and profile.experiences:
-            # experiences are ordered; take the first (most recent)
-            for exp in profile.experiences:
-                title = getattr(exp, "jobTitle", "") if hasattr(exp, "jobTitle") else ""
-                if title and title.strip():
-                    primary_title = title.strip()
-                    break
+        if len(fields) >= 2:
+            primary_field = fields[0]
+            primary_specs = profile.specializations[primary_field]
+            secondary_field = fields[1]
+            secondary_specs = profile.specializations[secondary_field]
+            
+            queries.extend(distribute(primary_specs, 7, primary_field))
+            queries.extend(distribute(secondary_specs, 5, secondary_field))
+            
+            if not primary_specs:
+                queries.append((primary_field, 7, primary_field))
+            if not secondary_specs:
+                queries.append((secondary_field, 5, secondary_field))
+                
+        elif len(fields) == 1:
+            primary_field = fields[0]
+            primary_specs = profile.specializations[primary_field]
+            queries.extend(distribute(primary_specs, 12, primary_field))
+            if not primary_specs:
+                queries.append((primary_field, 12, primary_field))
 
-        # Extract top skills (filter out generic tool names that make poor queries)
-        if hasattr(profile, "skills") and profile.skills:
-            top_skills = [s.strip() for s in profile.skills if s.strip()][:6]
-
-    # ── Build the query allocation ──────────────────────────────────
-
-    if primary_title and top_skills:
-        # Full Role-First Matrix: 7 pages title + 3 pages skill1 + 2 pages skill2
-        queries.append((primary_title, 7))
-        queries.append((top_skills[0], 3))
-        if len(top_skills) >= 2:
-            queries.append((top_skills[1], 2))
-        else:
-            # Only 1 skill — give it all 5 secondary pages
-            queries[1] = (top_skills[0], 5)
-
-    elif primary_title and not top_skills:
-        # Have job title but no skills — allocate all 12 pages to the title,
-        # but spread across title + career fields if available
-        queries.append((primary_title, 8))
-        if career_fields:
-            remaining = _TARGET_GROQ_CALLS - 8
-            per_field = max(1, remaining // len(career_fields))
-            for field in career_fields[:remaining]:
-                queries.append((field, per_field))
-        else:
-            queries[0] = (primary_title, _TARGET_GROQ_CALLS)
-
-    elif not primary_title and top_skills:
-        # No experiences — shift primary allocation to skills
-        if len(top_skills) >= 2:
-            queries.append((top_skills[0], 7))
-            queries.append((top_skills[1], 5))
-        else:
-            queries.append((top_skills[0], _TARGET_GROQ_CALLS))
-
-    elif career_fields:
-        # No experiences, no skills — use broad career fields
+    elif profile and hasattr(profile, "careerFields") and profile.careerFields:
+        career_fields = list(profile.careerFields)
         per_field = max(1, _TARGET_GROQ_CALLS // len(career_fields))
-        for field in career_fields:
-            queries.append((field, per_field))
+        remainder = _TARGET_GROQ_CALLS % len(career_fields)
+        for i, field in enumerate(career_fields):
+            queries.append((field, per_field + (1 if i < remainder else 0), field))
 
-    else:
+    if not queries:
         # Absolute fallback — no profile data at all
         queries = [
-            ("Technology", 4),
-            ("Engineering", 4),
-            ("Business & Finance", 4),
+            ("Technology", 4, "Technology"),
+            ("Engineering", 4, "Engineering"),
+            ("Business & Finance", 4, "Business & Finance"),
         ]
 
     # Ensure total pages sum to exactly _TARGET_GROQ_CALLS
-    total_allocated = sum(p for _, p in queries)
+    total_allocated = sum(p for _, p, _ in queries)
     if total_allocated < _TARGET_GROQ_CALLS and queries:
-        # Add remaining pages to the primary query
         deficit = _TARGET_GROQ_CALLS - total_allocated
-        q, p = queries[0]
-        queries[0] = (q, p + deficit)
+        q, p, f = queries[0]
+        queries[0] = (q, p + deficit, f)
 
     return queries
 
@@ -322,8 +303,7 @@ def _commit_jobs_immediately(
 # ──────────────────────────────────────────────────────────────────────
 
 async def _run_stream_ingestion(
-    queries: List[Tuple[str, int]],
-    career_fields: List[str],
+    queries: List[Tuple[str, int, str]],
     existing_ids: Set[str],
 ) -> Dict[str, int]:
     """
@@ -337,16 +317,7 @@ async def _run_stream_ingestion(
 
     # Build the complete task manifest: list of (query_string, page_index, fallback_query)
     task_manifest: List[Tuple[str, int, Optional[str]]] = []
-    for query, num_pages in queries:
-        # Determine fallback: use the first career field that isn't the query itself
-        fallback = None
-        for cf in career_fields:
-            if cf.lower() != query.lower():
-                fallback = cf
-                break
-        if fallback is None and career_fields:
-            fallback = career_fields[0]
-
+    for query, num_pages, fallback in queries:
         for page_idx in range(num_pages):
             task_manifest.append((query, page_idx, fallback))
 
@@ -354,7 +325,7 @@ async def _run_stream_ingestion(
     print(f"🕵️‍♂️ [Camoufox] Launching stealth browser | "
           f"{total_tasks} page tasks across {len(queries)} queries "
           f"(concurrency limit = {_MAX_CONCURRENT_PAGES})")
-    print(f"📋 [Queries] {[(q, p) for q, p in queries]}")
+    print(f"📋 [Queries] {[(q, p, f) for q, p, f in queries]}")
 
     try:
         async with AsyncCamoufox(headless=True) as browser:
@@ -526,22 +497,17 @@ async def run_ingestion_pipeline(profile=None) -> dict:
         # ── Step 1: Build Role-First query matrix ──────────────────────
         queries = _build_search_queries(active_profile)
 
-        # Extract career fields for fallback routing
-        career_fields = []
-        if active_profile and hasattr(active_profile, "careerFields") and active_profile.careerFields:
-            career_fields = list(active_profile.careerFields)
-
-        total_pages = sum(p for _, p in queries)
+        total_pages = sum(p for _, p, _ in queries)
         print(f"  📋 Query matrix ({total_pages} pages total):")
-        for query, pages in queries:
-            print(f"      → '{query}': {pages} pages ({pages * _JOBS_PER_GROQ_CALL} job target)")
+        for query, pages, fallback in queries:
+            print(f"      → '{query}' (fallback: '{fallback}'): {pages} pages ({pages * _JOBS_PER_GROQ_CALL} job target)")
 
         # ── Step 2: Snapshot existing IDs for dedup ────────────────────
         existing_ids = get_existing_job_ids()
         print(f"  📦 ChromaDB has {len(existing_ids)} existing jobs (dedup snapshot taken)")
 
         # ── Step 3: Stream ingestion — each page commits inline ────────
-        stats = await _run_stream_ingestion(queries, career_fields, existing_ids)
+        stats = await _run_stream_ingestion(queries, existing_ids)
         final_stats.update(stats)
 
         # ── Step 4: Purge stale jobs (> 14 days) ──────────────────────

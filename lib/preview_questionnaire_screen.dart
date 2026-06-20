@@ -232,7 +232,13 @@ class _PreviewQuestionnaireScreenState extends State<PreviewQuestionnaireScreen>
     final svc = context.read<UserProfileService>();
     final fullName = '${_firstNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}';
 
-    final skills = _selectedSpecializations.values.expand((s) => s).toList();
+    final Map<String, List<String>> mappedSpecializations = {};
+    for (final id in _selectedFieldIds) {
+      final label = CareerFieldsData.getField(id)?['label'] as String? ?? id;
+      if (_selectedSpecializations.containsKey(id)) {
+        mappedSpecializations[label] = _selectedSpecializations[id]!.toList();
+      }
+    }
 
     final List<Education> educations = [];
     if (_educationStatus != 'Prefer not to say' && _institutionCtrl.text.isNotEmpty) {
@@ -247,7 +253,12 @@ class _PreviewQuestionnaireScreenState extends State<PreviewQuestionnaireScreen>
       ));
     }
 
-    final credentialSkills = _credentials.map((c) => c['title'] ?? '').where((s) => s.isNotEmpty).toList();
+    final List<Credential> parsedCredentials = _credentials.map((c) => Credential(
+      id: const Uuid().v4(),
+      title: c['title'] ?? '',
+      issuer: c['issuer'] ?? '',
+      year: c['year'] ?? '',
+    )).toList();
 
     svc.updateProfile(svc.profile.copyWith(
       name: fullName,
@@ -258,7 +269,9 @@ class _PreviewQuestionnaireScreenState extends State<PreviewQuestionnaireScreen>
       careerFields: _selectedFieldIds
           .map((id) => CareerFieldsData.getField(id)?['label'] as String? ?? id)
           .toList(),
-      skills: [...skills, ...credentialSkills],
+      specializations: mappedSpecializations,
+      credentials: parsedCredentials,
+      skills: [],
       educations: educations,
       experiences: _experiences,
       bio: _bioCtrl.text.trim(),

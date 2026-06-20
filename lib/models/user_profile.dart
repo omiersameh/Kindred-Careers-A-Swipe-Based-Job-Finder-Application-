@@ -17,6 +17,8 @@ class UserProfile {
   List<Education> educations;
   List<String>
       careerFields; // e.g. ["Software Engineering", "Digital Marketing"]
+  Map<String, List<String>> specializations;
+  List<Credential> credentials;
   List<String> preferredIndustries;
   String preferredWorkMode; // "Remote", "Hybrid", "Onsite"
   double expectedSalaryMin;
@@ -36,6 +38,8 @@ class UserProfile {
     List<Experience>? experiences,
     List<Education>? educations,
     List<String>? careerFields,
+    Map<String, List<String>>? specializations,
+    List<Credential>? credentials,
     List<String>? preferredIndustries,
     this.preferredWorkMode = 'Hybrid',
     this.expectedSalaryMin = 0,
@@ -46,6 +50,8 @@ class UserProfile {
         experiences = experiences ?? [],
         educations = educations ?? [],
         careerFields = careerFields ?? [],
+        specializations = specializations ?? {},
+        credentials = credentials ?? [],
         preferredIndustries = preferredIndustries ?? [],
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
@@ -55,6 +61,10 @@ class UserProfile {
     final keywords = <String>[];
     keywords.addAll(skills);
     keywords.addAll(careerFields);
+    for (final specs in specializations.values) {
+      keywords.addAll(specs);
+    }
+    keywords.addAll(credentials.map((c) => c.title));
     keywords.addAll(preferredIndustries);
     for (final exp in experiences) {
       keywords.addAll(exp.responsibilityKeywords);
@@ -74,6 +84,8 @@ class UserProfile {
     List<Experience>? experiences,
     List<Education>? educations,
     List<String>? careerFields,
+    Map<String, List<String>>? specializations,
+    List<Credential>? credentials,
     List<String>? preferredIndustries,
     String? preferredWorkMode,
     double? expectedSalaryMin,
@@ -91,6 +103,8 @@ class UserProfile {
       experiences: experiences ?? List.from(this.experiences),
       educations: educations ?? List.from(this.educations),
       careerFields: careerFields ?? List.from(this.careerFields),
+      specializations: specializations ?? Map.from(this.specializations),
+      credentials: credentials ?? List.from(this.credentials),
       preferredIndustries:
           preferredIndustries ?? List.from(this.preferredIndustries),
       preferredWorkMode: preferredWorkMode ?? this.preferredWorkMode,
@@ -117,6 +131,8 @@ class UserProfile {
       'experiences': experiences.map((e) => e.toJson()).toList(),
       'educations': educations.map((e) => e.toJson()).toList(),
       'careerFields': careerFields,
+      'specializations': specializations,
+      'credentials': credentials.map((c) => c.toJson()).toList(),
       'preferredWorkMode': preferredWorkMode,
       'preferredIndustries': preferredIndustries,
       'expectedSalaryMin': expectedSalaryMin,
@@ -148,6 +164,17 @@ class UserProfile {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      specializations: (json['specializations'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(
+              key,
+              (value as List<dynamic>).map((e) => e as String).toList(),
+            ),
+          ) ??
+          {},
+      credentials: (json['credentials'] as List<dynamic>?)
+              ?.map((e) => Credential.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       preferredIndustries: (json['preferredIndustries'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
@@ -161,6 +188,43 @@ class UserProfile {
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'])
           : null,
+    );
+  }
+}
+
+// ============================================================
+// MODEL: Credential
+// Represents an internship, certificate, or credential.
+// ============================================================
+
+class Credential {
+  String id;
+  String title;
+  String issuer;
+  String year;
+
+  Credential({
+    required this.id,
+    required this.title,
+    required this.issuer,
+    required this.year,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'issuer': issuer,
+      'year': year,
+    };
+  }
+
+  factory Credential.fromJson(Map<String, dynamic> json) {
+    return Credential(
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      issuer: json['issuer'] as String? ?? '',
+      year: json['year'] as String? ?? '',
     );
   }
 }

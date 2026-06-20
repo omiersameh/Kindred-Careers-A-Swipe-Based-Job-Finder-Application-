@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 class Experience(BaseModel):
     id: str
@@ -15,6 +15,12 @@ class Education(BaseModel):
     institution: str
     graduationYear: str
 
+class Credential(BaseModel):
+    id: str
+    title: str
+    issuer: str
+    year: str
+
 class UserProfile(BaseModel):
     id: str
     name: str
@@ -23,6 +29,8 @@ class UserProfile(BaseModel):
     bio: str
     location: str
     skills: List[str]
+    specializations: Dict[str, List[str]] = {}
+    credentials: List[Credential] = []
     experiences: List[Experience]
     educations: List[Education]
     careerFields: List[str]

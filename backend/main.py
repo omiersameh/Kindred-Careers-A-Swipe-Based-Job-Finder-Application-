@@ -257,12 +257,16 @@ async def get_job_feed(req: FeedRequest, background_tasks: BackgroundTasks):
             exclude_ids=list(combined_exclude),
         )
 
-        # ── Step 3: Low-watermark auto-ingestion trigger ──────────────────
-        #    Count unviewed jobs returned. If below threshold, queue a scrape.
+        # ── Step 3: Auto-ingestion trigger ────────────────────────────────────
+        #    Count unviewed jobs returned. If below threshold OR if it's the
+        #    first request of the session (exclude_ids is empty), queue a scrape.
         unviewed_count = len(jobs) if jobs else 0
-        if unviewed_count < _LOW_WATERMARK_THRESHOLD:
-            print(f"📉 [Feed] Low watermark hit: {unviewed_count} unviewed jobs "
-                  f"(threshold: {_LOW_WATERMARK_THRESHOLD}). Checking scrape lock...")
+        is_first_request = len(req.exclude_ids) == 0
+        
+        if unviewed_count < _LOW_WATERMARK_THRESHOLD or is_first_request:
+            trigger_reason = "Low watermark" if unviewed_count < _LOW_WATERMARK_THRESHOLD else "Startup/Login trigger"
+            print(f"📉 [Feed] Trigger condition met ({trigger_reason}). "
+                  f"Unviewed: {unviewed_count}. Checking scrape lock...")
             with _scrape_lock:
                 if not _is_scraping_active:
                     _is_scraping_active = True

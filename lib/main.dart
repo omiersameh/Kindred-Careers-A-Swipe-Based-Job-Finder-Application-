@@ -65,8 +65,9 @@ class KindredCareersApp extends StatelessWidget {
         ],
         routes: {
           '/main': (_) => const MainShell(),
+          '/auth': (_) => const AuthGate(),
         },
-        home: showOnboarding ? const OnboardingScreen() : const _AuthGate(),
+        home: showOnboarding ? const OnboardingScreen() : const AuthGate(),
       );
     } catch (_) {
       // Fallback if analytics errors out
@@ -76,8 +77,9 @@ class KindredCareersApp extends StatelessWidget {
         theme: buildAppTheme(),
         routes: {
           '/main': (_) => const MainShell(),
+          '/auth': (_) => const AuthGate(),
         },
-        home: showOnboarding ? const OnboardingScreen() : const _AuthGate(),
+        home: showOnboarding ? const OnboardingScreen() : const AuthGate(),
       );
     }
   }
@@ -86,8 +88,8 @@ class KindredCareersApp extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // AUTH GATE — listens to Firebase auth state and routes accordingly
 // ─────────────────────────────────────────────────────────────
-class _AuthGate extends StatelessWidget {
-  const _AuthGate();
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {

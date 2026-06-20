@@ -50,8 +50,10 @@ Description: {job.description}
 
 USER PROFILE:
 Name: {profile.name}
-Skills: {', '.join(profile.skills)}
 Career Fields: {', '.join(profile.careerFields)}
+Specializations: {json.dumps(profile.specializations, default=str)}
+Skills: {', '.join(profile.skills)}
+Credentials: {json.dumps([c.model_dump() for c in profile.credentials], default=str)}
 Raw Experiences: {json.dumps([e.model_dump() for e in profile.experiences], default=str)}
 '''
 

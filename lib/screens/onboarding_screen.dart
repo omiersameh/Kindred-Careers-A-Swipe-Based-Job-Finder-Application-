@@ -68,9 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('seen_onboarding', true);
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const SignInScreen()),
-    );
+    Navigator.of(context).pushReplacementNamed('/auth');
   }
 
   @override

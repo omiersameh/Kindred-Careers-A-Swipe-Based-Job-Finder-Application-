@@ -166,8 +166,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ]),
                   const SizedBox(height: 16),
 
-                  // ── Skills
-                  _glassSection('CREDENTIALS & SKILLS', [
+                  // ── Specializations
+                  if (profile.specializations.isNotEmpty)
+                    _glassSection('SPECIALIZATIONS', [
+                      for (final entry in profile.specializations.entries) ...[
+                        Text(entry.key, style: kLabel(11, color: kGoldDim)),
+                        const SizedBox(height: 6),
+                        _pillChips(entry.value, onRemove: null),
+                        const SizedBox(height: 12),
+                      ]
+                    ]),
+                  const SizedBox(height: 16),
+
+                  // ── Credentials
+                  if (profile.credentials.isNotEmpty)
+                    _glassSection('CREDENTIALS', [
+                      _pillChips(profile.credentials.map((c) => c.title).toList(), onRemove: null),
+                    ]),
+                  const SizedBox(height: 16),
+
+                  // ── Additional Skills
+                  _glassSection('ADDITIONAL SKILLS', [
                     _pillChips(profile.skills,
                         onRemove: _isEditing ? svc.removeSkill : null),
                     if (_isEditing)
