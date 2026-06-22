@@ -1,0 +1,136 @@
+digraph KindredCareers {
+    // General Graph Settings
+    graph [
+        label="Kindred Careers - Application Architecture",
+        labelloc="t",
+        fontsize=16,
+        fontname="Helvetica Neue,Helvetica,Arial,sans-serif",
+        rankdir=LR,
+        splines=polyline,
+        nodesep=0.35,
+        ranksep=0.65,
+        bgcolor="#FAFAFA"
+    ];
+
+    // Default Node Settings
+    node [
+        fontname="Helvetica Neue,Helvetica,Arial,sans-serif",
+        fontsize=10,
+        shape=box,
+        style="filled,rounded",
+        fillcolor="#FFFFFF",
+        color="#CCCCCC",
+        penwidth=1.5,
+        margin="0.15,0.1"
+    ];
+
+    // Default Edge Settings
+    edge [
+        fontname="Helvetica Neue,Helvetica,Arial,sans-serif",
+        fontsize=8,
+        color="#707070",
+        arrowsize=0.7,
+        penwidth=1.2
+    ];
+
+    // --- EXTERNAL SERVICES ---
+    subgraph cluster_ext {
+        label="External Services";
+        style="dashed,rounded";
+        color="#B0BEC5";
+        bgcolor="#ECEFF1";
+
+        firebase [label="Firebase Auth\n& Firestore", fillcolor="#FFE082", color="#FFB300", shape=component];
+        groq [label="Groq Cloud API\n(Llama-3 LLM)", fillcolor="#FFCCBC", color="#FF5722", shape=component];
+    }
+
+    // --- FLUTTER FRONTEND ---
+    subgraph cluster_flutter {
+        label="Flutter Frontend (Mobile App)";
+        color="#90CAF9";
+        fillcolor="#E3F2FD";
+        bgcolor="#E3F2FD";
+        style="rounded,filled";
+
+        // UI layer
+        subgraph cluster_ui {
+            label="UI Views";
+            style="dotted,rounded";
+            color="#1E88E5";
+            
+            sign_in [label="Sign In View"];
+            swipe_deck [label="Swipe Home Screen"];
+            matches [label="Match List & PDF"];
+            profile [label="Profile Screen"];
+        }
+
+        // Services layer
+        subgraph cluster_services {
+            label="Core Services";
+            style="dotted,rounded";
+            color="#0D47A1";
+
+            auth_service [label="Auth Service"];
+            job_service [label="Job Service"];
+            cv_service [label="CV Generation Service"];
+        }
+
+        // Config Toggle
+        demo_config [label="DemoConfig\n(Offline Toggle)", fillcolor="#FFF59D", color="#FBC02D", shape=note];
+    }
+
+    // --- PYTHON BACKEND ---
+    subgraph cluster_backend {
+        label="Python FastAPI Backend";
+        color="#80CBC4";
+        fillcolor="#E0F2F1";
+        bgcolor="#E0F2F1";
+        style="rounded,filled";
+
+        api_gateway [label="FastAPI REST API", fillcolor="#80DEEA", color="#00ACC1"];
+
+        subgraph cluster_be_logic {
+            label="Logical Engines";
+            style="dotted,rounded";
+            color="#00695C";
+
+            scoring [label="Scoring & Recs"];
+            cv_gen [label="CV PDF Builder"];
+        }
+
+        subgraph cluster_storage {
+            label="Databases";
+            style="dotted,rounded";
+            color="#004D40";
+
+            chroma [label="Chroma Vector DB", shape=cylinder, fillcolor="#A5D6A7", color="#2E7D32"];
+            sqlite [label="SQLite Swipes DB", shape=cylinder, fillcolor="#C8E6C9", color="#388E3C"];
+        }
+    }
+
+    // --- RELATIONSHIPS & DATA FLOW ---
+
+    // UI to Services connections
+    sign_in -> auth_service;
+    swipe_deck -> job_service;
+    matches -> cv_service;
+    profile -> cv_service;
+
+    // Config controls services behavior
+    demo_config -> auth_service [style=dashed, arrowhead=none];
+    demo_config -> job_service [style=dashed, arrowhead=none];
+    demo_config -> cv_service [style=dashed, arrowhead=none];
+
+    // Live Mode outbound connections
+    auth_service -> firebase [label="Email/Google Sign-In", color="#FFB300"];
+    job_service -> api_gateway [label="Fetch Job Queue (HTTP)", color="#1E88E5"];
+    cv_service -> api_gateway [label="Trigger CV Build (HTTP)", color="#1E88E5"];
+
+    // Backend Routing & Storage
+    api_gateway -> scoring;
+    api_gateway -> cv_gen;
+
+    scoring -> chroma [label="Embedding Search"];
+    scoring -> sqlite [label="Check Left/Right Swipes"];
+    cv_gen -> groq [label="Tailor Resume Prompt"];
+}
