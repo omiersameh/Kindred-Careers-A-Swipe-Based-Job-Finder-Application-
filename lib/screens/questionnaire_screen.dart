@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,9 +9,12 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../app_theme.dart';
+import '../config/demo_config.dart';
 import '../data/career_fields_data.dart';
 import '../models/user_profile.dart';
 import '../services/user_profile_service.dart';
+import '../services/mock/mock_auth_service.dart';
+import '../utils/demo_typing_controller.dart';
 
 // ============================================================
 // SCREEN: QuestionnaireScreen
@@ -49,10 +53,132 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
   final _phoneCtrl    = TextEditingController();
   final _emailCtrl    = TextEditingController();
 
+  // ── Demo Mode: cached profile data from JSON ───────────────
+  Map<String, dynamic>? _demoProfile;
+
   @override
   void initState() {
     super.initState();
-    _emailCtrl.text = FirebaseAuth.instance.currentUser?.email ?? '';
+    if (DemoConfig.isDemoMode) {
+      _emailCtrl.text = MockAuthService.currentUser?.email ?? '';
+      _loadDemoProfile();
+    } else {
+      _emailCtrl.text = FirebaseAuth.instance.currentUser?.email ?? '';
+    }
+  }
+
+  /// Loads the demo member's profile JSON and auto-fills step 0.
+  Future<void> _loadDemoProfile() async {
+    try {
+      final path = '${DemoConfig.memberDataPrefix}_profile.json';
+      final jsonStr = await rootBundle.loadString(path);
+      _demoProfile = jsonDecode(jsonStr) as Map<String, dynamic>;
+      // Auto-fill step 0 (name) after a short delay
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) _demoAutoFillStep(0);
+    } catch (e) {
+      debugPrint('❌ [Demo] Failed to load profile: $e');
+    }
+  }
+
+  /// Auto-fills the current step's fields from the demo profile JSON.
+  Future<void> _demoAutoFillStep(int step) async {
+    if (!DemoConfig.isDemoMode || _demoProfile == null) return;
+    final p = _demoProfile!;
+
+    switch (step) {
+      case 0: // Name
+        await DemoTypingController.typeAll([
+          MapEntry(_firstNameCtrl, p['firstName'] as String? ?? ''),
+          MapEntry(_lastNameCtrl, p['lastName'] as String? ?? ''),
+        ]);
+        break;
+      case 1: // Location & Contact
+        await DemoTypingController.typeAll([
+          MapEntry(_locationCtrl, p['location'] as String? ?? ''),
+          MapEntry(_ageCtrl, (p['age'] ?? 24).toString()),
+          MapEntry(_phoneCtrl, p['phone'] as String? ?? ''),
+        ]);
+        // Email is already set from MockAuthService
+        break;
+      case 2: // Education
+        if (mounted) {
+          setState(() => _educationStatus = p['educationStatus'] as String? ?? '');
+        }
+        await Future.delayed(const Duration(milliseconds: 300));
+        await DemoTypingController.typeAll([
+          MapEntry(_institutionCtrl, p['institution'] as String? ?? ''),
+          MapEntry(_degreeCtrl, p['degree'] as String? ?? ''),
+          MapEntry(_fieldOfStudyCtrl, p['fieldOfStudy'] as String? ?? ''),
+          MapEntry(_gradYearCtrl, p['graduationYear'] as String? ?? ''),
+        ], delayMs: 25);
+        break;
+      case 3: // Career Fields
+        final fieldIds = (p['careerFieldIds'] as List<dynamic>?) ?? [];
+        for (final id in fieldIds) {
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (mounted) {
+            setState(() => _selectedFieldIds.add(id.toString()));
+          }
+        }
+        break;
+      case 4: // Specializations
+        final specs = (p['specializations'] as Map<String, dynamic>?) ?? {};
+        for (final entry in specs.entries) {
+          final fieldId = entry.key;
+          final specList = (entry.value as List<dynamic>).map((e) => e.toString()).toList();
+          for (final spec in specList) {
+            await Future.delayed(const Duration(milliseconds: 200));
+            if (mounted) {
+              setState(() {
+                _selectedSpecializations[fieldId] ??= <String>{};
+                _selectedSpecializations[fieldId]!.add(spec);
+              });
+            }
+          }
+        }
+        break;
+      case 5: // Bio
+        await DemoTypingController.typeInto(
+          _bioCtrl, p['bio'] as String? ?? '', delayMs: 15,
+        );
+        break;
+      case 6: // Credentials
+        final creds = (p['credentials'] as List<dynamic>?) ?? [];
+        for (final c in creds) {
+          final cMap = c as Map<String, dynamic>;
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted) {
+            setState(() {
+              _credentials.add({
+                'title': cMap['title']?.toString() ?? '',
+                'issuer': cMap['issuer']?.toString() ?? '',
+                'year': cMap['year']?.toString() ?? '',
+              });
+            });
+          }
+        }
+        break;
+      case 7: // Experience
+        final exps = (p['experiences'] as List<dynamic>?) ?? [];
+        for (final e in exps) {
+          final eMap = e as Map<String, dynamic>;
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted) {
+            setState(() {
+              _experiences.add(Experience(
+                id: const Uuid().v4(),
+                jobTitle: eMap['jobTitle']?.toString() ?? '',
+                company: eMap['company']?.toString() ?? '',
+                startDate: eMap['startDate']?.toString() ?? '',
+                endDate: eMap['endDate']?.toString() ?? 'Present',
+                description: eMap['description']?.toString() ?? '',
+              ));
+            });
+          }
+        }
+        break;
+    }
   }
 
   // ── Step 3: Education ───────────────────────────────────────
@@ -110,6 +236,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
       setState(() => _step++);
       _pageCtrl.animateToPage(_step,
           duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      // Demo mode: auto-fill the next step after transition
+      if (DemoConfig.isDemoMode) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _demoAutoFillStep(_step);
+        });
+      }
     } else {
       _submit();
     }
@@ -228,7 +360,9 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen> {
     ));
 
     // Mark questionnaire as complete so it won't show again for this user
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
+    final uid = DemoConfig.isDemoMode
+        ? (MockAuthService.currentUser?.uid ?? 'demo_guest')
+        : (FirebaseAuth.instance.currentUser?.uid ?? 'guest');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('questionnaire_done_$uid', true);
 

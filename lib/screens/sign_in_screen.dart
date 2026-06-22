@@ -3,11 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../app_theme.dart';
+import '../config/demo_config.dart';
+import '../services/mock/mock_auth_service.dart';
+import '../utils/demo_typing_controller.dart';
+
+// Conditional import for live mode
 import '../services/auth_service.dart';
 
 // ============================================================
 // SCREEN: SignInScreen
-// Firebase email/password + Google Sign-In
+// Firebase email/password + Google Sign-In (Live Mode)
+// + 3-Member Demo Persona Tabs (Demo Mode)
 // Matches the gold/glassmorphism aesthetic of the app.
 // ============================================================
 
@@ -35,6 +41,9 @@ class _SignInScreenState extends State<SignInScreen>
   bool _isLoading = false;
   String? _errorMsg;
 
+  // Demo mode: which member tab is selected (-1 = none)
+  int _selectedDemoMember = -1;
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +66,33 @@ class _SignInScreenState extends State<SignInScreen>
     super.dispose();
   }
 
+  // ── Demo Mode: Sign in as mock member ──────────────────────
+  Future<void> _demoSignIn(int memberIndex) async {
+    setState(() {
+      _selectedDemoMember = memberIndex;
+      _isLoading = true;
+      _errorMsg = null;
+    });
+
+    // Auto-fill email + password with typing animation
+    final member = DemoConfig.members[memberIndex - 1];
+    await DemoTypingController.typeInto(_emailCtrl, member['email']!);
+    await Future.delayed(const Duration(milliseconds: 150));
+    await DemoTypingController.typeInto(_passwordCtrl, member['password']!);
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Sign in with mock auth
+    MockAuthService.signInAsMember(memberIndex);
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+      // Navigate to the demo auth gate (which routes to questionnaire/main)
+      Navigator.of(context).pushReplacementNamed('/auth');
+    }
+  }
+
   Future<void> _signIn() async {
+    if (DemoConfig.isDemoMode) return; // Guard: never use Firebase in demo
     if (!_signInKey.currentState!.validate()) return;
     setState(() {
       _isLoading = true;
@@ -75,6 +110,7 @@ class _SignInScreenState extends State<SignInScreen>
   }
 
   Future<void> _signUp() async {
+    if (DemoConfig.isDemoMode) return;
     if (!_signUpKey.currentState!.validate()) return;
     setState(() {
       _isLoading = true;
@@ -91,6 +127,7 @@ class _SignInScreenState extends State<SignInScreen>
   }
 
   Future<void> _googleSignIn() async {
+    if (DemoConfig.isDemoMode) return;
     setState(() {
       _isLoading = true;
       _errorMsg = null;
@@ -105,6 +142,7 @@ class _SignInScreenState extends State<SignInScreen>
   }
 
   Future<void> _forgotPassword() async {
+    if (DemoConfig.isDemoMode) return;
     if (_emailCtrl.text.trim().isEmpty) {
       setState(() => _errorMsg = 'Enter your email above first.');
       return;
@@ -196,60 +234,66 @@ class _SignInScreenState extends State<SignInScreen>
                 const SizedBox(height: 14),
                 Text('Kindred Careers', style: kHeadline(26)),
                 const SizedBox(height: 6),
-                Text('Sign in to find your perfect role',
-                    style: kBody(14, opacity: 0.5)),
+                Text(
+                  DemoConfig.isDemoMode
+                      ? 'Select a demo persona below'
+                      : 'Sign in to find your perfect role',
+                  style: kBody(14, opacity: 0.5),
+                ),
               ]).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1),
 
               const SizedBox(height: 32),
 
-              // ── Google Sign-In ──
-              GestureDetector(
-                onTap: _isLoading ? null : _googleSignIn,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: kGlassBg,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: kGoldDim.withOpacity(0.35)),
+              // ── Google Sign-In (hidden in demo mode) ──
+              if (!DemoConfig.isDemoMode) ...[
+                GestureDetector(
+                  onTap: _isLoading ? null : _googleSignIn,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: kGlassBg,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: kGoldDim.withOpacity(0.35)),
+                        ),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('G',
+                                  style: TextStyle(
+                                      color: kGold,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
+                              const SizedBox(width: 10),
+                              Text('Continue with Google',
+                                  style: GoogleFonts.outfit(
+                                      color: kCream,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600)),
+                            ]),
                       ),
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text('G',
-                                style: TextStyle(
-                                    color: kGold,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 10),
-                            Text('Continue with Google',
-                                style: GoogleFonts.outfit(
-                                    color: kCream,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600)),
-                          ]),
                     ),
                   ),
-                ),
-              ).animate().fadeIn(duration: 500.ms, delay: 150.ms),
+                ).animate().fadeIn(duration: 500.ms, delay: 150.ms),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // ── Divider ──
-              Row(children: [
-                Expanded(child: Divider(color: kGoldDim.withOpacity(0.2))),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('or', style: kBody(13, opacity: 0.4)),
-                ),
-                Expanded(child: Divider(color: kGoldDim.withOpacity(0.2))),
-              ]),
+                // ── Divider ──
+                Row(children: [
+                  Expanded(child: Divider(color: kGoldDim.withOpacity(0.2))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('or', style: kBody(13, opacity: 0.4)),
+                  ),
+                  Expanded(child: Divider(color: kGoldDim.withOpacity(0.2))),
+                ]),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
+              ],
 
               // ── Tab: Sign In / Sign Up ──
               ClipRRect(
@@ -325,6 +369,12 @@ class _SignInScreenState extends State<SignInScreen>
                   ),
                 ),
               ).animate().fadeIn(duration: 500.ms, delay: 250.ms),
+
+              // ── Demo Mode: 3-Member Persona Tabs ──────────────
+              if (DemoConfig.isDemoMode) ...[
+                const SizedBox(height: 24),
+                _buildDemoMemberTabs(),
+              ],
             ]),
           ),
         ),
@@ -348,6 +398,72 @@ class _SignInScreenState extends State<SignInScreen>
     );
   }
 
+  // ── Demo Member Tabs ───────────────────────────────────────
+  Widget _buildDemoMemberTabs() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('DEMO ACCESS', style: kLabel(11, color: kGoldDim)),
+        const SizedBox(height: 10),
+        Row(
+          children: List.generate(3, (i) {
+            final member = DemoConfig.members[i];
+            final isSelected = _selectedDemoMember == (i + 1);
+            return Expanded(
+              child: GestureDetector(
+                onTap: _isLoading ? null : () => _demoSignIn(i + 1),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                  decoration: BoxDecoration(
+                    gradient: isSelected ? kGoldGradient : null,
+                    color: isSelected ? null : kGlassBg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected ? kGold : kGoldDim.withOpacity(0.4),
+                      width: isSelected ? 2 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: kGold.withOpacity(0.3), blurRadius: 12)]
+                        : null,
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        member['emoji']!,
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        member['label']!.split(' (').first, // e.g. "Member 1"
+                        style: GoogleFonts.outfit(
+                          color: isSelected ? kBg1 : kCream.withOpacity(0.8),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        '(${member['label']!.split('(').last}', // e.g. "(AI)"
+                        style: GoogleFonts.outfit(
+                          color: isSelected ? kBg1.withOpacity(0.7) : kGoldDim,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    ).animate().fadeIn(duration: 500.ms, delay: 400.ms).slideY(begin: 0.1);
+  }
+
   // ── Sign In Form ────────────────────────────────────────────
   Widget _buildSignInForm() {
     return Padding(
@@ -366,18 +482,22 @@ class _SignInScreenState extends State<SignInScreen>
                   setState(() => _obscureSignIn = !_obscureSignIn),
               validator: (v) => v!.length >= 6 ? null : 'Min 6 characters'),
           const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: _forgotPassword,
-              style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero, minimumSize: const Size(0, 30)),
-              child:
-                  Text('Forgot password?', style: kLabel(11, color: kGoldDim)),
+          if (!DemoConfig.isDemoMode)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _forgotPassword,
+                style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero, minimumSize: const Size(0, 30)),
+                child:
+                    Text('Forgot password?', style: kLabel(11, color: kGoldDim)),
+              ),
             ),
-          ),
           const SizedBox(height: 12),
-          _goldButton('Sign In', _signIn),
+          _goldButton(
+            DemoConfig.isDemoMode ? 'Select a Member Below ↓' : 'Sign In',
+            DemoConfig.isDemoMode ? () {} : _signIn,
+          ),
         ]),
       ),
     );
@@ -405,7 +525,10 @@ class _SignInScreenState extends State<SignInScreen>
                   setState(() => _obscureSignUp = !_obscureSignUp),
               validator: (v) => v!.length >= 6 ? null : 'Min 6 characters'),
           const SizedBox(height: 14),
-          _goldButton('Create Account', _signUp),
+          _goldButton(
+            DemoConfig.isDemoMode ? 'Select a Member Below ↓' : 'Create Account',
+            DemoConfig.isDemoMode ? () {} : _signUp,
+          ),
         ]),
       ),
     );
@@ -470,14 +593,22 @@ class _SignInScreenState extends State<SignInScreen>
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          gradient: kGoldGradient,
+          gradient: DemoConfig.isDemoMode ? null : kGoldGradient,
+          color: DemoConfig.isDemoMode ? kGlassBg : null,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: kGold.withOpacity(0.3), blurRadius: 16)],
+          border: DemoConfig.isDemoMode
+              ? Border.all(color: kGoldDim.withOpacity(0.3))
+              : null,
+          boxShadow: DemoConfig.isDemoMode
+              ? null
+              : [BoxShadow(color: kGold.withOpacity(0.3), blurRadius: 16)],
         ),
         child: Center(
             child: Text(label,
                 style: GoogleFonts.outfit(
-                    color: kBg1, fontSize: 15, fontWeight: FontWeight.w800))),
+                    color: DemoConfig.isDemoMode ? kGoldDim : kBg1,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800))),
       ),
     );
   }

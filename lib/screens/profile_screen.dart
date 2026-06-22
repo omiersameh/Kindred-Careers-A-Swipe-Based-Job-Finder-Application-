@@ -6,6 +6,10 @@ import '../app_theme.dart';
 import '../models/user_profile.dart';
 import '../services/user_profile_service.dart';
 import '../services/auth_service.dart';
+import '../services/cv_generation_service.dart';
+import '../services/mock/mock_job_service.dart';
+import '../config/demo_config.dart';
+import '../services/mock/mock_auth_service.dart';
 
 // ============================================================
 // SCREEN: ProfileScreen — Kindred Careers Style
@@ -307,7 +311,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             GestureDetector(
               onTap: () async {
-                await AuthService.signOut();
+                if (DemoConfig.isDemoMode) {
+                  MockAuthService.signOut();
+                  MockJobService().clearCache();
+                  if (context.mounted) context.read<AppState>().clear();
+                } else {
+                  await AuthService.signOut();
+                }
                 if (context.mounted) {
                   Navigator.of(context)
                       .pushNamedAndRemoveUntil('/', (route) => false);

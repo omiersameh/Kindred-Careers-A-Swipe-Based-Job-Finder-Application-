@@ -31,6 +31,20 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "mode"
+
+    productFlavors {
+        create("production") {
+            dimension = "mode"
+            resValue("string", "app_name", "Kindred Careers")
+        }
+        create("mock") {
+            dimension = "mode"
+            applicationIdSuffix = ".mock"
+            resValue("string", "app_name", "Kindred (Demo)")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

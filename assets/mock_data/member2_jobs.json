@@ -1,0 +1,602 @@
+[
+  {
+    "id": "m2_job_01",
+    "title": "Growth Hacker",
+    "company": "Kijamii",
+    "location": "Fifth Settlement, Cairo",
+    "description": "Own the entire growth funnel for top-tier MENA brands. Design and execute user acquisition experiments across paid, organic, and referral channels. Report directly to the VP of Growth.",
+    "industry": "Digital Agency",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 18,
+    "maxSalary": 32,
+    "requiredSkills": [
+      "Growth Hacking",
+      "Google Ads",
+      "Meta Ads",
+      "Analytics",
+      "A/B Testing"
+    ],
+    "matchScore": 93,
+    "vibeTag": "📈 Hyper-Growth",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "Top MENA digital agency",
+      "Full-funnel growth ownership",
+      "Direct VP reporting line",
+      "Fifth Settlement office"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job0.jpg"
+  },
+  {
+    "id": "m2_job_02",
+    "title": "SEO Specialist",
+    "company": "Robusta",
+    "location": "Dokki, Giza",
+    "description": "Lead SEO strategy for Robusta's portfolio of 50+ client websites. Conduct technical audits, keyword research, and content optimization. Track rankings and organic traffic KPIs weekly.",
+    "industry": "Software Studio",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 12,
+    "maxSalary": 22,
+    "requiredSkills": [
+      "SEO",
+      "Google Search Console",
+      "Ahrefs",
+      "Content Strategy",
+      "HTML"
+    ],
+    "matchScore": 90,
+    "vibeTag": "🔍 Data-First",
+    "careerField": "Business & Finance",
+    "specialization": "SEO & SEM Specialist",
+    "summaryBullets": [
+      "50+ client portfolio",
+      "Technical SEO leadership",
+      "Data-driven culture",
+      "Dokki office"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job1.jpg"
+  },
+  {
+    "id": "m2_job_03",
+    "title": "Product Manager",
+    "company": "Breadfast",
+    "location": "New Cairo, Egypt",
+    "description": "Own the product roadmap for Breadfast's grocery delivery app. Define features based on user research, analytics, and business goals. Work with engineering, design, and operations teams.",
+    "industry": "Quick Commerce",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 22,
+    "maxSalary": 40,
+    "requiredSkills": [
+      "Product Management",
+      "Agile",
+      "Analytics",
+      "User Research",
+      "Jira"
+    ],
+    "matchScore": 87,
+    "vibeTag": "🚀 Series B Rocket",
+    "careerField": "Business & Finance",
+    "specialization": "Marketing Manager",
+    "summaryBullets": [
+      "Egypt's top grocery app",
+      "Full product ownership",
+      "Series B funded",
+      "New Cairo HQ"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job2.jpg"
+  },
+  {
+    "id": "m2_job_04",
+    "title": "Performance Marketing Lead",
+    "company": "Media Monks Cairo",
+    "location": "Zamalek, Cairo",
+    "description": "Manage multi-million EGP paid media budgets across Google, Meta, TikTok, and Snapchat for global and regional brands. Optimize ROAS and build automated reporting dashboards.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 20,
+    "maxSalary": 38,
+    "requiredSkills": [
+      "Performance Marketing",
+      "Google Ads",
+      "Meta Ads",
+      "TikTok Ads",
+      "Data Studio"
+    ],
+    "matchScore": 85,
+    "vibeTag": "🎯 Precision Marketing",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "Multi-million EGP budgets",
+      "Global agency network",
+      "ROAS optimization focus",
+      "Zamalek creative hub"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job3.jpg"
+  },
+  {
+    "id": "m2_job_05",
+    "title": "Digital Marketing Manager",
+    "company": "Jumia Egypt",
+    "location": "Smart Village, Giza",
+    "description": "Lead digital marketing strategy for Jumia Egypt's marketplace. Manage paid acquisition, CRM campaigns, and cross-channel attribution. Drive quarterly GMV growth targets.",
+    "industry": "E-Commerce",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 22,
+    "maxSalary": 42,
+    "requiredSkills": [
+      "Digital Marketing",
+      "CRM",
+      "Google Analytics",
+      "SEO",
+      "Email Marketing"
+    ],
+    "matchScore": 82,
+    "vibeTag": "🛒 E-Commerce Giant",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "Africa's largest e-commerce",
+      "Full marketing strategy ownership",
+      "GMV growth mandate",
+      "Smart Village office"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job4.jpg"
+  },
+  {
+    "id": "m2_job_06",
+    "title": "Content Marketing Strategist",
+    "company": "MO4 Network",
+    "location": "Maadi, Cairo",
+    "description": "Develop content strategies for Arabic-first digital publications. Plan editorial calendars, manage content teams, and optimize for SEO and social engagement across MENA audiences.",
+    "industry": "Digital Media",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 14,
+    "maxSalary": 25,
+    "requiredSkills": [
+      "Content Strategy",
+      "SEO",
+      "Social Media",
+      "Copywriting",
+      "Analytics"
+    ],
+    "matchScore": 80,
+    "vibeTag": "📝 Content Authority",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "Arabic-first content network",
+      "Editorial leadership",
+      "MENA audience reach",
+      "Maadi creative office"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job5.jpg"
+  },
+  {
+    "id": "m2_job_07",
+    "title": "Brand Manager",
+    "company": "Nestlé Egypt",
+    "location": "6th of October City, Giza",
+    "description": "Manage the full brand lifecycle for Nestlé's confectionery portfolio in Egypt. Lead product launches, ATL/BTL campaigns, and P&L management. Work with regional marketing leadership.",
+    "industry": "FMCG",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 25,
+    "maxSalary": 45,
+    "requiredSkills": [
+      "Brand Management",
+      "P&L",
+      "Market Research",
+      "Campaign Planning",
+      "Agile"
+    ],
+    "matchScore": 78,
+    "vibeTag": "🏢 Global FMCG",
+    "careerField": "Business & Finance",
+    "specialization": "Marketing Manager",
+    "summaryBullets": [
+      "Nestlé confectionery brands",
+      "Full P&L ownership",
+      "ATL/BTL campaigns",
+      "6th October campus"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job6.jpg"
+  },
+  {
+    "id": "m2_job_08",
+    "title": "E-Commerce Growth Manager",
+    "company": "Noon Egypt",
+    "location": "New Cairo, Egypt",
+    "description": "Drive seller acquisition and GMV growth for Noon's Egypt marketplace. Optimize conversion funnels, manage promotional calendars, and build strategic seller partnerships.",
+    "industry": "E-Commerce",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 20,
+    "maxSalary": 38,
+    "requiredSkills": [
+      "E-Commerce",
+      "Growth Marketing",
+      "Analytics",
+      "Seller Relations",
+      "SQL"
+    ],
+    "matchScore": 76,
+    "vibeTag": "🛒 Marketplace Growth",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "MENA e-commerce platform",
+      "Seller ecosystem growth",
+      "Data-driven decisions",
+      "New Cairo office"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job7.jpg"
+  },
+  {
+    "id": "m2_job_09",
+    "title": "Social Media Manager",
+    "company": "Vodafone Egypt",
+    "location": "Smart Village, Giza",
+    "description": "Manage Vodafone Egypt's social media presence across Facebook, Instagram, TikTok, and Twitter. Create engaging content, manage community interactions, and track social KPIs.",
+    "industry": "Telecommunications",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 15,
+    "maxSalary": 28,
+    "requiredSkills": [
+      "Social Media",
+      "Content Creation",
+      "Community Management",
+      "Analytics",
+      "Copywriting"
+    ],
+    "matchScore": 74,
+    "vibeTag": "📱 40M+ Reach",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "40M+ subscriber brand",
+      "Multi-platform management",
+      "Creative content focus",
+      "Smart Village campus"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job8.jpg"
+  },
+  {
+    "id": "m2_job_10",
+    "title": "CRM & Email Marketing Specialist",
+    "company": "Otlob (Talabat)",
+    "location": "Smart Village, Giza",
+    "description": "Design and execute CRM campaigns for Talabat's food delivery platform in Egypt. Build automated email and push notification flows. Optimize retention and reactivation funnels.",
+    "industry": "Food Delivery",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 14,
+    "maxSalary": 26,
+    "requiredSkills": [
+      "CRM",
+      "Email Marketing",
+      "Marketing Automation",
+      "Braze",
+      "Analytics"
+    ],
+    "matchScore": 72,
+    "vibeTag": "🍕 Retention Master",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "Millions of active users",
+      "CRM automation ownership",
+      "Retention optimization",
+      "Delivery Hero company"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job9.jpg"
+  },
+  {
+    "id": "m2_job_11",
+    "title": "Marketing Analyst",
+    "company": "Banque Misr",
+    "location": "Downtown Cairo, Egypt",
+    "description": "Analyze marketing campaign performance and customer acquisition data for Egypt's second-largest bank. Build dashboards and provide actionable insights to the marketing leadership team.",
+    "industry": "Banking",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 12,
+    "maxSalary": 22,
+    "requiredSkills": [
+      "Google Analytics",
+      "SQL",
+      "Excel",
+      "Data Visualization",
+      "Market Research"
+    ],
+    "matchScore": 70,
+    "vibeTag": "🏦 Banking Insights",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "Egypt's 2nd largest bank",
+      "Marketing analytics",
+      "Dashboard development",
+      "Downtown Cairo HQ"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job10.jpg"
+  },
+  {
+    "id": "m2_job_12",
+    "title": "Influencer Marketing Coordinator",
+    "company": "Shahid (MBC Group)",
+    "location": "Media Production City, Giza",
+    "description": "Manage influencer partnerships and campaigns for Shahid's streaming platform in Egypt. Source talent, negotiate deals, and track campaign ROI across social platforms.",
+    "industry": "Entertainment",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 12,
+    "maxSalary": 22,
+    "requiredSkills": [
+      "Influencer Marketing",
+      "Social Media",
+      "Negotiation",
+      "Content Strategy",
+      "Excel"
+    ],
+    "matchScore": 68,
+    "vibeTag": "🌟 Entertainment Marketing",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "MENA streaming platform",
+      "Influencer partnerships",
+      "Entertainment industry",
+      "Media City campus"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job11.jpg"
+  },
+  {
+    "id": "m2_job_13",
+    "title": "Product Marketing Manager",
+    "company": "Instabug",
+    "location": "Maadi, Cairo",
+    "description": "Position Instabug's developer tools in the global market. Create go-to-market strategies, competitive analysis, and sales enablement materials. Work closely with product and sales teams.",
+    "industry": "Developer Tools",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 22,
+    "maxSalary": 40,
+    "requiredSkills": [
+      "Product Marketing",
+      "Go-to-Market",
+      "Competitive Analysis",
+      "Content",
+      "B2B"
+    ],
+    "matchScore": 66,
+    "vibeTag": "🛠️ B2B SaaS",
+    "careerField": "Business & Finance",
+    "specialization": "Marketing Manager",
+    "summaryBullets": [
+      "Global B2B developer tools",
+      "Go-to-market ownership",
+      "25K+ app customers",
+      "Maadi startup hub"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job12.jpg"
+  },
+  {
+    "id": "m2_job_14",
+    "title": "Paid Search Specialist (SEM)",
+    "company": "Ogilvy Cairo",
+    "location": "Zamalek, Cairo",
+    "description": "Manage Google Ads campaigns for Ogilvy's portfolio of enterprise clients including telecom, banking, and FMCG brands. Optimize quality scores, bidding strategies, and ad copy.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 12,
+    "maxSalary": 22,
+    "requiredSkills": [
+      "Google Ads",
+      "SEM",
+      "Keyword Research",
+      "Analytics",
+      "Excel"
+    ],
+    "matchScore": 64,
+    "vibeTag": "🏆 Legacy Agency",
+    "careerField": "Business & Finance",
+    "specialization": "SEO & SEM Specialist",
+    "summaryBullets": [
+      "Global advertising network",
+      "Enterprise client portfolio",
+      "SEM specialization",
+      "Zamalek office"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job13.jpg"
+  },
+  {
+    "id": "m2_job_15",
+    "title": "Customer Success Manager",
+    "company": "Paymob",
+    "location": "Heliopolis, Cairo",
+    "description": "Onboard and retain enterprise merchants on Paymob's payment platform. Build relationships, reduce churn, and identify upsell opportunities. Track NPS and customer health scores.",
+    "industry": "FinTech",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 15,
+    "maxSalary": 28,
+    "requiredSkills": [
+      "Customer Success",
+      "CRM",
+      "Communication",
+      "Analytics",
+      "Agile"
+    ],
+    "matchScore": 62,
+    "vibeTag": "🤝 Client Relations",
+    "careerField": "Business & Finance",
+    "specialization": "Marketing Manager",
+    "summaryBullets": [
+      "FinTech payment platform",
+      "Enterprise merchant focus",
+      "Churn reduction mandate",
+      "Heliopolis office"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job14.jpg"
+  },
+  {
+    "id": "m2_job_16",
+    "title": "Trade Marketing Executive",
+    "company": "Procter & Gamble Egypt",
+    "location": "6th of October City, Giza",
+    "description": "Execute trade marketing strategies for P&G's home care and personal care brands in Egyptian retail channels. Manage in-store activations, planograms, and retailer relationships.",
+    "industry": "FMCG",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 18,
+    "maxSalary": 32,
+    "requiredSkills": [
+      "Trade Marketing",
+      "Retail",
+      "Merchandising",
+      "Excel",
+      "Communication"
+    ],
+    "matchScore": 60,
+    "vibeTag": "🏪 Retail Excellence",
+    "careerField": "Business & Finance",
+    "specialization": "Marketing Manager",
+    "summaryBullets": [
+      "P&G household brands",
+      "Retail channel management",
+      "In-store activations",
+      "6th October campus"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job15.jpg"
+  },
+  {
+    "id": "m2_job_17",
+    "title": "PR & Communications Specialist",
+    "company": "Edelman Egypt (Weber Shandwick)",
+    "location": "Garden City, Cairo",
+    "description": "Manage media relations and PR campaigns for corporate and government clients. Write press releases, coordinate events, and build relationships with Egyptian media outlets.",
+    "industry": "Public Relations",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 12,
+    "maxSalary": 22,
+    "requiredSkills": [
+      "PR",
+      "Media Relations",
+      "Copywriting",
+      "Event Planning",
+      "Communication"
+    ],
+    "matchScore": 58,
+    "vibeTag": "📰 Media Relations",
+    "careerField": "Business & Finance",
+    "specialization": "Marketing Manager",
+    "summaryBullets": [
+      "Global PR network",
+      "Corporate client portfolio",
+      "Media relations focus",
+      "Garden City office"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job16.jpg"
+  },
+  {
+    "id": "m2_job_18",
+    "title": "Marketplace Operations Analyst",
+    "company": "Amazon Egypt (Souq.com)",
+    "location": "New Cairo, Egypt",
+    "description": "Analyze marketplace seller performance and category growth data. Build reports, identify operational bottlenecks, and recommend improvements to drive seller GMV growth.",
+    "industry": "E-Commerce",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 18,
+    "maxSalary": 32,
+    "requiredSkills": [
+      "SQL",
+      "Excel",
+      "Analytics",
+      "Operations",
+      "Communication"
+    ],
+    "matchScore": 56,
+    "vibeTag": "📊 Amazon Scale",
+    "careerField": "Business & Finance",
+    "specialization": "Digital Marketing Specialist",
+    "summaryBullets": [
+      "Amazon/Souq marketplace",
+      "Data analytics focus",
+      "Seller growth optimization",
+      "New Cairo campus"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job17.jpg"
+  },
+  {
+    "id": "m2_job_19",
+    "title": "Junior Account Executive",
+    "company": "DDB Cairo",
+    "location": "Garden City, Cairo",
+    "description": "Support senior account managers in client servicing for DDB's portfolio of FMCG and telecom brands. Coordinate briefs, manage timelines, and ensure seamless creative delivery.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 8,
+    "maxSalary": 15,
+    "requiredSkills": [
+      "Account Management",
+      "Communication",
+      "Project Management",
+      "Excel",
+      "Presentation"
+    ],
+    "matchScore": 54,
+    "vibeTag": "🎨 Creative Agency",
+    "careerField": "Business & Finance",
+    "specialization": "Marketing Manager",
+    "summaryBullets": [
+      "Global creative network",
+      "FMCG & telecom clients",
+      "Client servicing role",
+      "Garden City studio"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job18.jpg"
+  },
+  {
+    "id": "m2_job_20",
+    "title": "Marketing Intern (Summer Program)",
+    "company": "Unilever Egypt",
+    "location": "6th of October City, Giza",
+    "description": "Join Unilever's structured summer internship in the marketing department. Rotate across brand management, digital, and trade marketing for 3 months with mentorship from senior leaders.",
+    "industry": "FMCG",
+    "jobType": "Internship",
+    "workMode": "Onsite",
+    "minSalary": 5,
+    "maxSalary": 8,
+    "requiredSkills": [
+      "Marketing",
+      "Communication",
+      "Excel",
+      "Presentation",
+      "Creativity"
+    ],
+    "matchScore": 52,
+    "vibeTag": "🎓 Career Launchpad",
+    "careerField": "Business & Finance",
+    "specialization": "Marketing Manager",
+    "summaryBullets": [
+      "Structured summer program",
+      "Brand management rotation",
+      "Senior mentorship",
+      "Unilever global network"
+    ],
+    "imageUrl": "assets/mock_banners/m2_job19.jpg"
+  }
+]

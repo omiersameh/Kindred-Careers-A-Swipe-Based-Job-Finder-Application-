@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../app_theme.dart';
+import '../config/demo_config.dart';
 import '../models/job.dart';
 import '../services/cv_generation_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/mock/mock_job_service.dart';
+import '../services/mock/mock_cv_service.dart';
 import '../widgets/cv_preview_dialog.dart';
 
 // ============================================================
@@ -150,8 +153,17 @@ class _MatchCardState extends State<_MatchCard> {
     setState(() => _isGeneratingCV = true);
     try {
       final profile = context.read<UserProfileService>().profile;
-      final cvService = CVGenerationService();
-      final cv = await cvService.generateCV(job: widget.job, profile: profile);
+      dynamic cv;
+      
+      if (DemoConfig.isDemoMode) {
+        final jobIndex = MockJobService().getJobIndex(widget.job.id);
+        cv = await MockCVService().generateMockCV(
+          job: widget.job, profile: profile, jobIndex: jobIndex);
+      } else {
+        final cvService = CVGenerationService();
+        cv = await cvService.generateCV(job: widget.job, profile: profile);
+      }
+
       if (mounted) {
         widget.appState.updateCV(widget.job.id, cv);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -183,13 +195,20 @@ class _MatchCardState extends State<_MatchCard> {
     if (widget.cv == null) return;
     setState(() => _isDownloadingPDF = true);
     try {
-      final profile = context.read<UserProfileService>().profile;
-      final cvService = CVGenerationService();
-      final path = await cvService.downloadCVPdf(
-        cv: widget.cv!,
-        profile: profile,
-        job: widget.job,
-      );
+      String? path;
+      if (DemoConfig.isDemoMode) {
+        final jobIndex = MockJobService().getJobIndex(widget.job.id);
+        path = await MockCVService().openMockPdf(jobIndex: jobIndex);
+      } else {
+        final profile = context.read<UserProfileService>().profile;
+        final cvService = CVGenerationService();
+        path = await cvService.downloadCVPdf(
+          cv: widget.cv!,
+          profile: profile,
+          job: widget.job,
+        );
+      }
+
       if (mounted) {
         if (path != null) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -202,7 +221,7 @@ class _MatchCardState extends State<_MatchCard> {
           ));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('PDF download failed. Is the backend running?'),
+            content: Text('PDF open failed. Is the backend running?'),
             backgroundColor: Color(0xAAD32F2F),
           ));
         }

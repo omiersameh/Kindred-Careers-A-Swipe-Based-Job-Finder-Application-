@@ -122,13 +122,21 @@ class _JobCardState extends State<JobCard> {
         children: [
           // Background
           if (hasImage)
-            Image.network(
-              widget.job.imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => hasLocalBanner
-                  ? Image.asset(_localBanner!, fit: BoxFit.cover)
-                  : _gradientHero(),
-            )
+            widget.job.imageUrl.startsWith('assets/')
+                ? Image.asset(
+                    widget.job.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => hasLocalBanner
+                        ? Image.asset(_localBanner!, fit: BoxFit.cover)
+                        : _gradientHero(),
+                  )
+                : Image.network(
+                    widget.job.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => hasLocalBanner
+                        ? Image.asset(_localBanner!, fit: BoxFit.cover)
+                        : _gradientHero(),
+                  )
           else if (hasLocalBanner)
             Image.asset(_localBanner!, fit: BoxFit.cover)
           else

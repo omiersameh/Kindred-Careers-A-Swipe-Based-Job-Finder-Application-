@@ -1,0 +1,602 @@
+[
+  {
+    "id": "m1_job_01",
+    "title": "Senior AI Engineer",
+    "company": "Vodafone Intelligent Solutions (VOIS)",
+    "location": "Smart Village, Giza",
+    "description": "Design and deploy production-grade machine learning models for telecom network optimization. Work with cross-functional teams to build AI-driven products serving 40M+ subscribers across MENA. Requires strong Python, ML frameworks, and cloud deployment skills.",
+    "industry": "Telecommunications",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 25,
+    "maxSalary": 45,
+    "requiredSkills": [
+      "Python",
+      "PyTorch",
+      "TensorFlow",
+      "AWS",
+      "Docker"
+    ],
+    "matchScore": 94,
+    "vibeTag": "🚀 Innovation Hub",
+    "careerField": "Technology",
+    "specialization": "AI & ML Engineer",
+    "summaryBullets": [
+      "Lead AI model development for 40M+ users",
+      "Deploy on AWS SageMaker at scale",
+      "Hybrid role at Smart Village campus",
+      "Competitive MENA-grade compensation"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job0.jpg"
+  },
+  {
+    "id": "m1_job_02",
+    "title": "Backend Developer (Python/FastAPI)",
+    "company": "Instabug",
+    "location": "Maadi, Cairo",
+    "description": "Build and maintain high-throughput backend APIs powering Instabug's SDK analytics platform used by 25,000+ mobile apps worldwide. You'll work with FastAPI, PostgreSQL, Redis, and Kubernetes in a fast-paced product engineering team.",
+    "industry": "Technology",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 20,
+    "maxSalary": 38,
+    "requiredSkills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "Redis",
+      "Kubernetes"
+    ],
+    "matchScore": 91,
+    "vibeTag": "⚡ Fast-Paced Startup",
+    "careerField": "Technology",
+    "specialization": "Full-Stack Developer",
+    "summaryBullets": [
+      "APIs serving 25K+ mobile apps",
+      "FastAPI + PostgreSQL stack",
+      "Maadi office with flexible hours",
+      "International product exposure"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job1.jpg"
+  },
+  {
+    "id": "m1_job_03",
+    "title": "Mobile Engineer (Flutter)",
+    "company": "Swvl",
+    "location": "New Cairo, Egypt",
+    "description": "Join Swvl's mobile team to build and maintain the Flutter-based ride-sharing app used across Egypt, Pakistan, and UAE. Focus on performance, offline-first architecture, and seamless payment integrations.",
+    "industry": "Transportation",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 22,
+    "maxSalary": 40,
+    "requiredSkills": [
+      "Flutter",
+      "Dart",
+      "Firebase",
+      "REST APIs",
+      "Git"
+    ],
+    "matchScore": 88,
+    "vibeTag": "🌍 Global Impact",
+    "careerField": "Technology",
+    "specialization": "Mobile App Developer",
+    "summaryBullets": [
+      "Multi-country ride-sharing platform",
+      "Flutter + Firebase stack",
+      "Offline-first architecture focus",
+      "Equity-eligible position"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job2.jpg"
+  },
+  {
+    "id": "m1_job_04",
+    "title": "ML Ops Engineer",
+    "company": "Valeo Egypt",
+    "location": "Smart Village, Giza",
+    "description": "Operationalize machine learning models for autonomous driving perception systems. Build MLOps pipelines for training, versioning, and deploying computer vision models at Valeo's Egypt R&D center.",
+    "industry": "Automotive",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 28,
+    "maxSalary": 50,
+    "requiredSkills": [
+      "Python",
+      "MLflow",
+      "Docker",
+      "Kubernetes",
+      "YOLOv8"
+    ],
+    "matchScore": 86,
+    "vibeTag": "🔬 R&D Driven",
+    "careerField": "Technology",
+    "specialization": "AI & ML Engineer",
+    "summaryBullets": [
+      "Autonomous driving R&D center",
+      "YOLOv8 + MLflow pipelines",
+      "World-class engineering team",
+      "Smart Village campus"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job3.jpg"
+  },
+  {
+    "id": "m1_job_05",
+    "title": "Full-Stack Developer",
+    "company": "Fawry",
+    "location": "New Cairo, Egypt",
+    "description": "Build internal tools and customer-facing portals for Egypt's largest digital payments platform. Work across React frontends and Python/FastAPI backends processing millions of transactions daily.",
+    "industry": "FinTech",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 18,
+    "maxSalary": 35,
+    "requiredSkills": [
+      "Python",
+      "FastAPI",
+      "React",
+      "PostgreSQL",
+      "Docker"
+    ],
+    "matchScore": 83,
+    "vibeTag": "💳 FinTech Pioneer",
+    "careerField": "Technology",
+    "specialization": "Full-Stack Developer",
+    "summaryBullets": [
+      "Egypt's #1 payments platform",
+      "Millions of daily transactions",
+      "Full-stack Python + React",
+      "New Cairo HQ"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job4.jpg"
+  },
+  {
+    "id": "m1_job_06",
+    "title": "Data Scientist",
+    "company": "Careem (Uber)",
+    "location": "Smart Village, Giza",
+    "description": "Leverage large-scale ride and delivery data to build predictive models for pricing, ETA estimation, and fraud detection. Collaborate with product and engineering teams across MENA.",
+    "industry": "Transportation",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 30,
+    "maxSalary": 55,
+    "requiredSkills": [
+      "Python",
+      "SQL",
+      "PyTorch",
+      "Spark",
+      "A/B Testing"
+    ],
+    "matchScore": 81,
+    "vibeTag": "📊 Data at Scale",
+    "careerField": "Technology",
+    "specialization": "Data Scientist",
+    "summaryBullets": [
+      "MENA-scale ride data platform",
+      "Pricing & fraud ML models",
+      "Uber-backed resources",
+      "Competitive international package"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job5.jpg"
+  },
+  {
+    "id": "m1_job_07",
+    "title": "Computer Vision Engineer",
+    "company": "Si-Ware Systems",
+    "location": "Maadi, Cairo",
+    "description": "Develop computer vision algorithms for spectral sensing hardware. Build YOLOv8 and custom CNN models for real-time material identification in industrial and agricultural settings.",
+    "industry": "DeepTech",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 22,
+    "maxSalary": 42,
+    "requiredSkills": [
+      "Python",
+      "YOLOv8",
+      "OpenCV",
+      "PyTorch",
+      "C++"
+    ],
+    "matchScore": 80,
+    "vibeTag": "🔬 DeepTech Pioneer",
+    "careerField": "Technology",
+    "specialization": "AI & ML Engineer",
+    "summaryBullets": [
+      "Hardware + AI integration",
+      "YOLOv8 real-time detection",
+      "Egyptian DeepTech leader",
+      "Published research team"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job6.jpg"
+  },
+  {
+    "id": "m1_job_08",
+    "title": "NLP Engineer",
+    "company": "Appen (Remote - Cairo)",
+    "location": "Remote (Cairo)",
+    "description": "Build Arabic NLP models for text classification, sentiment analysis, and named entity recognition. Fine-tune large language models on Arabic-specific datasets for MENA clients.",
+    "industry": "AI Services",
+    "jobType": "Full-Time",
+    "workMode": "Remote",
+    "minSalary": 25,
+    "maxSalary": 48,
+    "requiredSkills": [
+      "Python",
+      "Transformers",
+      "NLP",
+      "Arabic NLP",
+      "HuggingFace"
+    ],
+    "matchScore": 78,
+    "vibeTag": "🌐 Remote-First",
+    "careerField": "Technology",
+    "specialization": "AI & ML Engineer",
+    "summaryBullets": [
+      "Arabic NLP specialization",
+      "LLM fine-tuning at scale",
+      "Fully remote position",
+      "Global AI data company"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job7.jpg"
+  },
+  {
+    "id": "m1_job_09",
+    "title": "DevOps Engineer",
+    "company": "Amazon (AWS Egypt)",
+    "location": "New Cairo, Egypt",
+    "description": "Manage CI/CD pipelines, container orchestration, and cloud infrastructure for AWS services in the MENA region. Automate deployments and ensure 99.99% uptime for production systems.",
+    "industry": "Cloud Computing",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 35,
+    "maxSalary": 65,
+    "requiredSkills": [
+      "AWS",
+      "Terraform",
+      "Docker",
+      "Kubernetes",
+      "Python"
+    ],
+    "matchScore": 76,
+    "vibeTag": "☁️ Cloud Giant",
+    "careerField": "Technology",
+    "specialization": "DevOps Engineer",
+    "summaryBullets": [
+      "AWS MENA infrastructure team",
+      "99.99% uptime SLA",
+      "Top-tier compensation",
+      "New Cairo campus"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job8.jpg"
+  },
+  {
+    "id": "m1_job_10",
+    "title": "Flutter Team Lead",
+    "company": "LINKdotNET",
+    "location": "Dokki, Giza",
+    "description": "Lead a team of 5 Flutter developers building enterprise mobile applications for banking and telecom clients. Architect clean code patterns, conduct code reviews, and mentor junior developers.",
+    "industry": "IT Services",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 25,
+    "maxSalary": 45,
+    "requiredSkills": [
+      "Flutter",
+      "Dart",
+      "Clean Architecture",
+      "Leadership",
+      "Firebase"
+    ],
+    "matchScore": 75,
+    "vibeTag": "👨‍💻 Team Leadership",
+    "careerField": "Technology",
+    "specialization": "Mobile App Developer",
+    "summaryBullets": [
+      "Lead team of 5 developers",
+      "Enterprise banking clients",
+      "Clean architecture focus",
+      "Dokki office location"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job9.jpg"
+  },
+  {
+    "id": "m1_job_11",
+    "title": "AI Research Assistant",
+    "company": "Nile University - AI Lab",
+    "location": "Smart Village, Giza",
+    "description": "Conduct research in deep learning for medical imaging applications. Publish papers, develop prototype models, and collaborate with international research partners.",
+    "industry": "Research & Academia",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 12,
+    "maxSalary": 22,
+    "requiredSkills": [
+      "Python",
+      "PyTorch",
+      "Research",
+      "Medical Imaging",
+      "LaTeX"
+    ],
+    "matchScore": 73,
+    "vibeTag": "🎓 Academic Impact",
+    "careerField": "Technology",
+    "specialization": "AI & ML Engineer",
+    "summaryBullets": [
+      "Medical imaging AI research",
+      "International publication track",
+      "University lab environment",
+      "Smart Village campus"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job10.jpg"
+  },
+  {
+    "id": "m1_job_12",
+    "title": "Software Engineer (Backend)",
+    "company": "Paymob",
+    "location": "Heliopolis, Cairo",
+    "description": "Build and scale payment processing APIs handling thousands of transactions per second. Work with event-driven architecture, microservices, and financial compliance standards.",
+    "industry": "FinTech",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 20,
+    "maxSalary": 38,
+    "requiredSkills": [
+      "Python",
+      "FastAPI",
+      "RabbitMQ",
+      "PostgreSQL",
+      "Microservices"
+    ],
+    "matchScore": 71,
+    "vibeTag": "💰 Payment Infrastructure",
+    "careerField": "Technology",
+    "specialization": "Full-Stack Developer",
+    "summaryBullets": [
+      "High-throughput payment APIs",
+      "Event-driven microservices",
+      "Series C FinTech",
+      "Heliopolis office"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job11.jpg"
+  },
+  {
+    "id": "m1_job_13",
+    "title": "Machine Learning Engineer",
+    "company": "Orange Labs Egypt",
+    "location": "Smart Village, Giza",
+    "description": "Develop ML solutions for network anomaly detection, customer churn prediction, and automated support. Deploy models using MLOps best practices on Orange's cloud infrastructure.",
+    "industry": "Telecommunications",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 20,
+    "maxSalary": 40,
+    "requiredSkills": [
+      "Python",
+      "Scikit-learn",
+      "TensorFlow",
+      "MLflow",
+      "SQL"
+    ],
+    "matchScore": 70,
+    "vibeTag": "📡 Telecom Innovation",
+    "careerField": "Technology",
+    "specialization": "AI & ML Engineer",
+    "summaryBullets": [
+      "Telecom ML applications",
+      "Churn prediction models",
+      "Orange R&D lab",
+      "Smart Village location"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job12.jpg"
+  },
+  {
+    "id": "m1_job_14",
+    "title": "Flutter Mobile Developer",
+    "company": "Halan",
+    "location": "Maadi, Cairo",
+    "description": "Build features for Halan's super-app providing ride-hailing, microfinance, and e-commerce to underserved communities. Work on Flutter with BLoC state management and offline-first patterns.",
+    "industry": "FinTech / SuperApp",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 18,
+    "maxSalary": 32,
+    "requiredSkills": [
+      "Flutter",
+      "Dart",
+      "BLoC",
+      "REST APIs",
+      "Firebase"
+    ],
+    "matchScore": 68,
+    "vibeTag": "🏍️ Social Impact",
+    "careerField": "Technology",
+    "specialization": "Mobile App Developer",
+    "summaryBullets": [
+      "Super-app for underserved markets",
+      "Flutter + BLoC architecture",
+      "Social impact mission",
+      "Maadi office"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job13.jpg"
+  },
+  {
+    "id": "m1_job_15",
+    "title": "Data Engineer",
+    "company": "Talabat (Delivery Hero)",
+    "location": "Smart Village, Giza",
+    "description": "Build and maintain data pipelines processing millions of food delivery orders daily. Design data warehouse solutions and ensure data quality for analytics and ML teams.",
+    "industry": "Food Delivery",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 25,
+    "maxSalary": 48,
+    "requiredSkills": [
+      "Python",
+      "Apache Spark",
+      "Airflow",
+      "SQL",
+      "AWS"
+    ],
+    "matchScore": 66,
+    "vibeTag": "🍕 Scale Operations",
+    "careerField": "Technology",
+    "specialization": "Data Scientist",
+    "summaryBullets": [
+      "Millions of daily orders",
+      "Spark + Airflow pipelines",
+      "Delivery Hero backing",
+      "Smart Village campus"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job14.jpg"
+  },
+  {
+    "id": "m1_job_16",
+    "title": "Embedded AI Developer",
+    "company": "SICO Technology",
+    "location": "10th of Ramadan City, Egypt",
+    "description": "Deploy edge AI models on custom ARM-based hardware for smart device applications. Optimize neural networks for real-time inference on resource-constrained embedded platforms.",
+    "industry": "Electronics",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 15,
+    "maxSalary": 28,
+    "requiredSkills": [
+      "Python",
+      "TensorFlow Lite",
+      "C++",
+      "Embedded Systems",
+      "ARM"
+    ],
+    "matchScore": 64,
+    "vibeTag": "🔧 Edge Computing",
+    "careerField": "Technology",
+    "specialization": "AI & ML Engineer",
+    "summaryBullets": [
+      "Edge AI on custom hardware",
+      "Egyptian electronics manufacturer",
+      "TensorFlow Lite optimization",
+      "Industrial campus"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job15.jpg"
+  },
+  {
+    "id": "m1_job_17",
+    "title": "Python Backend Developer",
+    "company": "MaxAB",
+    "location": "Heliopolis, Cairo",
+    "description": "Develop backend services for MaxAB's B2B e-commerce platform connecting retailers with suppliers across Egypt. Build scalable APIs with Django and integrate with logistics systems.",
+    "industry": "B2B E-Commerce",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 18,
+    "maxSalary": 32,
+    "requiredSkills": [
+      "Python",
+      "Django",
+      "PostgreSQL",
+      "Redis",
+      "Docker"
+    ],
+    "matchScore": 62,
+    "vibeTag": "📦 B2B Revolution",
+    "careerField": "Technology",
+    "specialization": "Full-Stack Developer",
+    "summaryBullets": [
+      "B2B supply chain platform",
+      "Django + PostgreSQL backend",
+      "Series B startup",
+      "Heliopolis office"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job16.jpg"
+  },
+  {
+    "id": "m1_job_18",
+    "title": "Cloud Solutions Architect",
+    "company": "Microsoft Egypt",
+    "location": "Smart Village, Giza",
+    "description": "Design and implement Azure-based cloud solutions for enterprise clients across the Middle East. Lead proof-of-concept implementations and provide technical guidance to sales teams.",
+    "industry": "Cloud Computing",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 40,
+    "maxSalary": 75,
+    "requiredSkills": [
+      "Azure",
+      "Python",
+      "Terraform",
+      "Microservices",
+      "Architecture"
+    ],
+    "matchScore": 60,
+    "vibeTag": "☁️ Enterprise Cloud",
+    "careerField": "Technology",
+    "specialization": "Cloud Architect",
+    "summaryBullets": [
+      "Azure enterprise solutions",
+      "MENA enterprise clients",
+      "Microsoft benefits package",
+      "Smart Village office"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job17.jpg"
+  },
+  {
+    "id": "m1_job_19",
+    "title": "QA Automation Engineer",
+    "company": "Efishery (Remote - Egypt)",
+    "location": "Remote (Egypt)",
+    "description": "Build automated test suites for Flutter mobile apps and Python backends. Implement CI/CD testing pipelines and ensure product quality across multiple platforms.",
+    "industry": "AgriTech",
+    "jobType": "Full-Time",
+    "workMode": "Remote",
+    "minSalary": 15,
+    "maxSalary": 28,
+    "requiredSkills": [
+      "Flutter Testing",
+      "Python",
+      "Selenium",
+      "CI/CD",
+      "Git"
+    ],
+    "matchScore": 58,
+    "vibeTag": "🌱 AgriTech Remote",
+    "careerField": "Technology",
+    "specialization": "QA & Test Engineer",
+    "summaryBullets": [
+      "Flutter test automation",
+      "Fully remote position",
+      "AgriTech innovation",
+      "International team"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job18.jpg"
+  },
+  {
+    "id": "m1_job_20",
+    "title": "Junior Software Developer",
+    "company": "ITWorx",
+    "location": "Smart Village, Giza",
+    "description": "Join ITWorx's academy-to-project pipeline building enterprise applications for government and banking clients. Rotate across teams to gain full-stack exposure in your first year.",
+    "industry": "IT Consulting",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 10,
+    "maxSalary": 18,
+    "requiredSkills": [
+      "Python",
+      "Flutter",
+      "SQL",
+      "Git",
+      "Agile"
+    ],
+    "matchScore": 55,
+    "vibeTag": "🎓 Career Launchpad",
+    "careerField": "Technology",
+    "specialization": "Full-Stack Developer",
+    "summaryBullets": [
+      "Structured graduate program",
+      "Enterprise client exposure",
+      "Full-stack rotation",
+      "Smart Village campus"
+    ],
+    "imageUrl": "assets/mock_banners/m1_job19.jpg"
+  }
+]

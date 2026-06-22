@@ -1,0 +1,602 @@
+[
+  {
+    "id": "m3_job_01",
+    "title": "Senior Video Editor",
+    "company": "BEE Agency",
+    "location": "Maadi, Cairo",
+    "description": "Lead video post-production for BEE Agency's portfolio of lifestyle and luxury brand clients. Edit TV commercials, social video content, and branded documentaries. Mentor junior editors.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 18,
+    "maxSalary": 32,
+    "requiredSkills": [
+      "Premiere Pro",
+      "After Effects",
+      "DaVinci Resolve",
+      "Color Grading",
+      "Storytelling"
+    ],
+    "matchScore": 95,
+    "vibeTag": "🎬 Award-Winning",
+    "careerField": "Art & Design",
+    "specialization": "Videographer & Video Editor",
+    "summaryBullets": [
+      "Luxury brand video work",
+      "Lead post-production team",
+      "TV commercial editing",
+      "Maadi creative studio"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job0.jpg"
+  },
+  {
+    "id": "m3_job_02",
+    "title": "Motion Graphics Lead",
+    "company": "Tarek Nour Communications",
+    "location": "Mohandeseen, Giza",
+    "description": "Direct the motion graphics department at MENA's largest independent agency. Create animated brand identities, TV bumpers, and digital content for top Egyptian and regional brands.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 20,
+    "maxSalary": 38,
+    "requiredSkills": [
+      "After Effects",
+      "Cinema 4D",
+      "Illustrator",
+      "Animation",
+      "Creative Direction"
+    ],
+    "matchScore": 92,
+    "vibeTag": "🏆 Legacy Agency",
+    "careerField": "Art & Design",
+    "specialization": "Motion Graphics Designer",
+    "summaryBullets": [
+      "MENA's largest indie agency",
+      "Department leadership role",
+      "Iconic Egyptian brands",
+      "Mohandeseen HQ"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job1.jpg"
+  },
+  {
+    "id": "m3_job_03",
+    "title": "Creative Director",
+    "company": "FP7 McCann Cairo",
+    "location": "Zamalek, Cairo",
+    "description": "Lead creative vision for FP7 McCann's Cairo office. Oversee campaign development from concept to execution across TV, digital, and experiential channels for regional clients.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 30,
+    "maxSalary": 55,
+    "requiredSkills": [
+      "Creative Direction",
+      "Brand Strategy",
+      "Presentation",
+      "Team Leadership",
+      "Storytelling"
+    ],
+    "matchScore": 89,
+    "vibeTag": "🌟 Global Network",
+    "careerField": "Art & Design",
+    "specialization": "Art Director",
+    "summaryBullets": [
+      "Global McCann network",
+      "Full creative ownership",
+      "TV + digital campaigns",
+      "Zamalek creative hub"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job2.jpg"
+  },
+  {
+    "id": "m3_job_04",
+    "title": "Senior Animator (After Effects)",
+    "company": "DDB Cairo",
+    "location": "Garden City, Cairo",
+    "description": "Create character animations, explainer videos, and social media motion content for DDB's FMCG and telecom clients. Work with the creative team to bring campaign concepts to life.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 15,
+    "maxSalary": 28,
+    "requiredSkills": [
+      "After Effects",
+      "Character Animation",
+      "Illustrator",
+      "Storyboarding",
+      "Photoshop"
+    ],
+    "matchScore": 86,
+    "vibeTag": "✨ Premium Creatives",
+    "careerField": "Art & Design",
+    "specialization": "Motion Graphics Designer",
+    "summaryBullets": [
+      "FMCG & telecom campaigns",
+      "Character animation focus",
+      "Global creative network",
+      "Garden City studio"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job3.jpg"
+  },
+  {
+    "id": "m3_job_05",
+    "title": "Head of Video Content",
+    "company": "MBC Group Egypt",
+    "location": "Media Production City, Giza",
+    "description": "Lead video content strategy and production for MBC's Egyptian digital platforms. Manage a team of editors, producers, and content creators. Drive viewership and engagement KPIs.",
+    "industry": "Media & Entertainment",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 28,
+    "maxSalary": 50,
+    "requiredSkills": [
+      "Video Production",
+      "Creative Direction",
+      "Team Leadership",
+      "Content Strategy",
+      "Premiere Pro"
+    ],
+    "matchScore": 83,
+    "vibeTag": "📺 Broadcast Scale",
+    "careerField": "Media & Communication",
+    "specialization": "Film Director",
+    "summaryBullets": [
+      "MENA broadcast giant",
+      "Department leadership",
+      "Digital platform focus",
+      "Media Production City"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job4.jpg"
+  },
+  {
+    "id": "m3_job_06",
+    "title": "Visual Effects Artist",
+    "company": "Rising Studios",
+    "location": "6th of October City, Giza",
+    "description": "Create visual effects for Egyptian feature films and TV series. Composite green screen footage, create CG environments, and deliver VFX shots meeting international quality standards.",
+    "industry": "Film & Television",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 15,
+    "maxSalary": 30,
+    "requiredSkills": [
+      "After Effects",
+      "Nuke",
+      "Cinema 4D",
+      "Compositing",
+      "VFX"
+    ],
+    "matchScore": 81,
+    "vibeTag": "🎥 Film VFX",
+    "careerField": "Art & Design",
+    "specialization": "Motion Graphics Designer",
+    "summaryBullets": [
+      "Feature film VFX",
+      "International quality standards",
+      "Egyptian film industry",
+      "6th October studio"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job5.jpg"
+  },
+  {
+    "id": "m3_job_07",
+    "title": "Content Creator (Video)",
+    "company": "Wunderman Thompson Cairo",
+    "location": "Zamalek, Cairo",
+    "description": "Produce engaging video content for social media campaigns across TikTok, Instagram Reels, and YouTube Shorts. Concept, shoot, edit, and deliver short-form content for major brands.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 12,
+    "maxSalary": 22,
+    "requiredSkills": [
+      "Premiere Pro",
+      "Photography",
+      "Social Media",
+      "Storytelling",
+      "Content Creation"
+    ],
+    "matchScore": 79,
+    "vibeTag": "📱 Short-Form King",
+    "careerField": "Media & Communication",
+    "specialization": "Content Creator & YouTuber",
+    "summaryBullets": [
+      "Short-form video focus",
+      "TikTok + Reels + Shorts",
+      "Global agency network",
+      "Zamalek office"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job6.jpg"
+  },
+  {
+    "id": "m3_job_08",
+    "title": "Broadcast Graphics Designer",
+    "company": "CBC TV",
+    "location": "Media Production City, Giza",
+    "description": "Design on-air graphics, lower thirds, show openers, and broadcast packages for CBC's lineup of talk shows and news programs. Work with the on-air promotions team.",
+    "industry": "Broadcasting",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 12,
+    "maxSalary": 22,
+    "requiredSkills": [
+      "After Effects",
+      "Photoshop",
+      "Broadcast Graphics",
+      "Cinema 4D",
+      "Typography"
+    ],
+    "matchScore": 77,
+    "vibeTag": "📡 Live Broadcast",
+    "careerField": "Art & Design",
+    "specialization": "Motion Graphics Designer",
+    "summaryBullets": [
+      "Live TV graphics",
+      "Show opener design",
+      "Egyptian broadcast leader",
+      "Media City campus"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job7.jpg"
+  },
+  {
+    "id": "m3_job_09",
+    "title": "3D Motion Designer",
+    "company": "Elephant Cairo",
+    "location": "New Cairo, Egypt",
+    "description": "Create 3D product visualizations and animated commercials for FMCG and automotive clients. Use Cinema 4D and Octane Render to produce photorealistic product shots and environments.",
+    "industry": "Production House",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 15,
+    "maxSalary": 28,
+    "requiredSkills": [
+      "Cinema 4D",
+      "Octane Render",
+      "After Effects",
+      "3D Modeling",
+      "Lighting"
+    ],
+    "matchScore": 75,
+    "vibeTag": "🎨 3D Artistry",
+    "careerField": "Art & Design",
+    "specialization": "Motion Graphics Designer",
+    "summaryBullets": [
+      "Photorealistic 3D product shots",
+      "FMCG & automotive clients",
+      "Cinema 4D + Octane",
+      "New Cairo studio"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job8.jpg"
+  },
+  {
+    "id": "m3_job_10",
+    "title": "Documentary Film Editor",
+    "company": "Al Jazeera Documentary (Cairo Bureau)",
+    "location": "Downtown Cairo, Egypt",
+    "description": "Edit long-form documentary content for Al Jazeera's Arabic documentary channel. Work with field producers to shape narratives, color grade footage, and deliver broadcast-ready films.",
+    "industry": "Media",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 18,
+    "maxSalary": 35,
+    "requiredSkills": [
+      "Premiere Pro",
+      "DaVinci Resolve",
+      "Documentary Editing",
+      "Color Grading",
+      "Sound Design"
+    ],
+    "matchScore": 73,
+    "vibeTag": "🌍 World Stories",
+    "careerField": "Media & Communication",
+    "specialization": "Film Director",
+    "summaryBullets": [
+      "International documentary channel",
+      "Long-form storytelling",
+      "Color grading specialty",
+      "Downtown Cairo bureau"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job9.jpg"
+  },
+  {
+    "id": "m3_job_11",
+    "title": "Senior Colorist",
+    "company": "Synergy Post Production",
+    "location": "Heliopolis, Cairo",
+    "description": "Provide professional color grading services for TV commercials, music videos, and feature films. Work with DaVinci Resolve in a calibrated color suite. Collaborate with directors and DOPs.",
+    "industry": "Post Production",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 18,
+    "maxSalary": 32,
+    "requiredSkills": [
+      "DaVinci Resolve",
+      "Color Grading",
+      "Color Science",
+      "Premiere Pro",
+      "LUTs"
+    ],
+    "matchScore": 71,
+    "vibeTag": "🎨 Color Science",
+    "careerField": "Art & Design",
+    "specialization": "Videographer & Video Editor",
+    "summaryBullets": [
+      "Professional color suite",
+      "TV + film grading",
+      "Director collaboration",
+      "Heliopolis studio"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job10.jpg"
+  },
+  {
+    "id": "m3_job_12",
+    "title": "Social Media Video Producer",
+    "company": "Vodafone Egypt",
+    "location": "Smart Village, Giza",
+    "description": "Produce social-first video content for Vodafone Egypt's digital channels. Create TikTok, Reels, and YouTube content that drives engagement. Manage a small production crew.",
+    "industry": "Telecommunications",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 14,
+    "maxSalary": 25,
+    "requiredSkills": [
+      "Premiere Pro",
+      "Social Media",
+      "Content Creation",
+      "Photography",
+      "Copywriting"
+    ],
+    "matchScore": 69,
+    "vibeTag": "📱 40M+ Reach",
+    "careerField": "Media & Communication",
+    "specialization": "Content Creator & YouTuber",
+    "summaryBullets": [
+      "40M+ subscriber brand",
+      "Social-first video content",
+      "Production crew management",
+      "Smart Village campus"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job11.jpg"
+  },
+  {
+    "id": "m3_job_13",
+    "title": "Animation Director",
+    "company": "Barajoun Entertainment",
+    "location": "6th of October City, Giza",
+    "description": "Direct animation sequences for Barajoun's animated feature films and series. Oversee character animation, timing, and visual storytelling. Manage a team of 8 animators.",
+    "industry": "Animation",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 22,
+    "maxSalary": 40,
+    "requiredSkills": [
+      "Animation Direction",
+      "Maya",
+      "Storyboarding",
+      "Character Design",
+      "Team Leadership"
+    ],
+    "matchScore": 67,
+    "vibeTag": "🎭 Feature Animation",
+    "careerField": "Art & Design",
+    "specialization": "Art Director",
+    "summaryBullets": [
+      "Animated feature films",
+      "Team of 8 animators",
+      "Arab animation studio",
+      "6th October campus"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job12.jpg"
+  },
+  {
+    "id": "m3_job_14",
+    "title": "UI/UX Motion Designer",
+    "company": "Instabug",
+    "location": "Maadi, Cairo",
+    "description": "Design micro-interactions and UI animations for Instabug's developer tools. Create Lottie animations, prototype transitions, and build a motion design system for the product team.",
+    "industry": "Developer Tools",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 15,
+    "maxSalary": 28,
+    "requiredSkills": [
+      "After Effects",
+      "Lottie",
+      "Figma",
+      "UI Animation",
+      "Prototyping"
+    ],
+    "matchScore": 65,
+    "vibeTag": "🛠️ Product Motion",
+    "careerField": "Art & Design",
+    "specialization": "Motion Graphics Designer",
+    "summaryBullets": [
+      "UI micro-interactions",
+      "Lottie animation system",
+      "B2B product design",
+      "Maadi startup hub"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job13.jpg"
+  },
+  {
+    "id": "m3_job_15",
+    "title": "Video Production Manager",
+    "company": "TBWA Egypt",
+    "location": "Zamalek, Cairo",
+    "description": "Oversee video production from pre-production to delivery for TBWA's portfolio of FMCG and financial services clients. Manage budgets, timelines, and external production vendors.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 20,
+    "maxSalary": 35,
+    "requiredSkills": [
+      "Production Management",
+      "Budgeting",
+      "Premiere Pro",
+      "Client Management",
+      "Scheduling"
+    ],
+    "matchScore": 63,
+    "vibeTag": "🎬 Production Leadership",
+    "careerField": "Media & Communication",
+    "specialization": "Film Director",
+    "summaryBullets": [
+      "Global agency network",
+      "Production budget ownership",
+      "FMCG & finance clients",
+      "Zamalek office"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job14.jpg"
+  },
+  {
+    "id": "m3_job_16",
+    "title": "Music Video Director",
+    "company": "Rotana Records (Cairo Office)",
+    "location": "Mohandeseen, Giza",
+    "description": "Direct music videos for Rotana's roster of Arabic pop and shaabi artists. Manage creative concepts, location scouting, and post-production workflows for high-profile releases.",
+    "industry": "Music & Entertainment",
+    "jobType": "Contract",
+    "workMode": "Hybrid",
+    "minSalary": 15,
+    "maxSalary": 35,
+    "requiredSkills": [
+      "Directing",
+      "Cinematography",
+      "Premiere Pro",
+      "Storyboarding",
+      "Creative Vision"
+    ],
+    "matchScore": 61,
+    "vibeTag": "🎵 Arabic Music",
+    "careerField": "Media & Communication",
+    "specialization": "Film Director",
+    "summaryBullets": [
+      "Arabic music industry leader",
+      "High-profile artist roster",
+      "Full creative control",
+      "Mohandeseen office"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job15.jpg"
+  },
+  {
+    "id": "m3_job_17",
+    "title": "Graphic Designer (Visual Identity)",
+    "company": "Brndz Agency",
+    "location": "New Cairo, Egypt",
+    "description": "Design visual identities, brand guidelines, and marketing collateral for Brndz's portfolio of Egyptian and Gulf-based corporate clients. Work across print and digital formats.",
+    "industry": "Branding Agency",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 10,
+    "maxSalary": 20,
+    "requiredSkills": [
+      "Photoshop",
+      "Illustrator",
+      "InDesign",
+      "Brand Identity",
+      "Typography"
+    ],
+    "matchScore": 59,
+    "vibeTag": "🎨 Brand Craft",
+    "careerField": "Art & Design",
+    "specialization": "Art Director",
+    "summaryBullets": [
+      "Corporate brand identities",
+      "Print + digital design",
+      "Egyptian & Gulf clients",
+      "New Cairo studio"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job16.jpg"
+  },
+  {
+    "id": "m3_job_18",
+    "title": "Podcast Producer & Editor",
+    "company": "Anghami Studios",
+    "location": "Smart Village, Giza",
+    "description": "Produce and edit podcast content for Anghami's Arabic podcast network. Handle audio editing, sound design, and episode production. Collaborate with hosts and content strategists.",
+    "industry": "Digital Media",
+    "jobType": "Full-Time",
+    "workMode": "Hybrid",
+    "minSalary": 10,
+    "maxSalary": 18,
+    "requiredSkills": [
+      "Premiere Pro",
+      "Audition",
+      "Sound Design",
+      "Content Production",
+      "Storytelling"
+    ],
+    "matchScore": 57,
+    "vibeTag": "🎙️ Audio Content",
+    "careerField": "Media & Communication",
+    "specialization": "Content Creator & YouTuber",
+    "summaryBullets": [
+      "Arabic podcast network",
+      "Audio production focus",
+      "MENA streaming platform",
+      "Smart Village office"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job17.jpg"
+  },
+  {
+    "id": "m3_job_19",
+    "title": "Event Videographer",
+    "company": "Pyramids Entertainment Group",
+    "location": "Giza, Egypt",
+    "description": "Film and edit highlight reels for corporate events, product launches, and concerts at Pyramids Entertainment's venues. Work with run-and-gun cinematography and fast turnaround editing.",
+    "industry": "Events & Entertainment",
+    "jobType": "Contract",
+    "workMode": "Onsite",
+    "minSalary": 8,
+    "maxSalary": 18,
+    "requiredSkills": [
+      "Cinematography",
+      "Premiere Pro",
+      "Run-and-Gun",
+      "Lighting",
+      "Sound Recording"
+    ],
+    "matchScore": 55,
+    "vibeTag": "🎪 Live Events",
+    "careerField": "Art & Design",
+    "specialization": "Videographer & Video Editor",
+    "summaryBullets": [
+      "Corporate events + concerts",
+      "Fast turnaround editing",
+      "Pyramids venue access",
+      "Dynamic event work"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job18.jpg"
+  },
+  {
+    "id": "m3_job_20",
+    "title": "Junior Creative Designer",
+    "company": "Leo Burnett Cairo",
+    "location": "Zamalek, Cairo",
+    "description": "Join Leo Burnett's creative department as a junior designer. Work on campaign visuals, social media assets, and print materials for multinational FMCG clients under senior creative mentorship.",
+    "industry": "Advertising",
+    "jobType": "Full-Time",
+    "workMode": "Onsite",
+    "minSalary": 8,
+    "maxSalary": 15,
+    "requiredSkills": [
+      "Photoshop",
+      "Illustrator",
+      "After Effects",
+      "Creativity",
+      "Presentation"
+    ],
+    "matchScore": 52,
+    "vibeTag": "🎓 Career Launchpad",
+    "careerField": "Art & Design",
+    "specialization": "Art Director",
+    "summaryBullets": [
+      "Global creative network",
+      "FMCG multinational clients",
+      "Senior mentorship program",
+      "Zamalek studio"
+    ],
+    "imageUrl": "assets/mock_banners/m3_job19.jpg"
+  }
+]

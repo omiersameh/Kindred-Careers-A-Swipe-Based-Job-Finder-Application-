@@ -5,11 +5,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../app_theme.dart';
+import '../config/demo_config.dart';
 import '../models/job.dart';
 import '../models/swipe_action.dart';
 import '../services/cv_generation_service.dart';
 import '../services/job_recommendation_service.dart';
 import '../services/user_profile_service.dart';
+import '../services/mock/mock_job_service.dart';
+import '../services/mock/mock_cv_service.dart';
 import '../widgets/job_card.dart';
 
 // ============================================================
@@ -32,39 +35,40 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // ── Services: live vs. mock ─────────────────────────────────
   final JobRecommendationService _recService = JobRecommendationService();
   final CVGenerationService _cvService = CVGenerationService();
+  final MockJobService _mockJobService = MockJobService();
+  final MockCVService _mockCvService = MockCVService();
   final CardSwiperController _swiperController = CardSwiperController();
   final ValueNotifier<double> _scrollOffset = ValueNotifier(0);
 
   List<Job> _jobs = [];
   bool _isLoading = true;
 
-  // ── 60-second Queue Refresh Timer ─────────────────────────────────
+  // ── 60-second Queue Refresh Timer (disabled in demo mode) ──
   Timer? _queueTimer;
 
   @override
   void initState() {
     super.initState();
 
-    // Register the append-only callback: called by the service when background
-    // queue updates return new jobs. Appends to BOTTOM of deck, never resets index.
-    _recService.setOnQueueUpdate(_onQueueUpdateReceived);
-
-    // Load initial job feed
-    _loadJobs();
-
-    // ── Start 60-second periodic timer ────────────────────────────────
-    // On each tick: delegates to service which checks if user is active
-    // (has swiped at least once since last fetch) before fetching.
-    _queueTimer = Timer.periodic(
-      const Duration(seconds: 60),
-      (_) {
-        if (!mounted) return;
-        final profile = context.read<UserProfileService>().profile;
-        _recService.triggerTimedQueueUpdate(profile);
-      },
-    );
+    if (DemoConfig.isDemoMode) {
+      // Demo: load static jobs from assets, no timer, no backend
+      _loadDemoJobs();
+    } else {
+      // Live: register queue callback and start periodic timer
+      _recService.setOnQueueUpdate(_onQueueUpdateReceived);
+      _loadJobs();
+      _queueTimer = Timer.periodic(
+        const Duration(seconds: 60),
+        (_) {
+          if (!mounted) return;
+          final profile = context.read<UserProfileService>().profile;
+          _recService.triggerTimedQueueUpdate(profile);
+        },
+      );
+    }
   }
 
   @override
@@ -75,7 +79,20 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // ─── Initial Load ────────────────────────────────────────────
+  // ─── Demo Mode: Load Static Jobs ──────────────────────────────
+
+  Future<void> _loadDemoJobs() async {
+    setState(() => _isLoading = true);
+    final jobs = await _mockJobService.getJobs();
+    if (mounted) {
+      setState(() {
+        _jobs = jobs;
+        _isLoading = false;
+      });
+    }
+  }
+
+  // ─── Initial Load (Live Mode) ───────────────────────────────
 
   void _loadJobs() {
     setState(() => _isLoading = true);
@@ -160,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (previousIndex >= _jobs.length) return true;
     final job = _jobs[previousIndex];
     if (direction == CardSwiperDirection.right) {
-      _handleSwipeRight(job);
+      _handleSwipeRight(job, previousIndex);
     } else if (direction == CardSwiperDirection.left) {
       _handleSwipeLeft(job);
     }
@@ -169,17 +186,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleSwipeLeft(Job job) {
-    final profile = context.read<UserProfileService>().profile;
-    _recService.recordSwipe(
-      SwipeAction(
-        id: 'sw_${DateTime.now().millisecondsSinceEpoch}',
-        jobId: job.id,
-        jobTitle: job.title,
-        company: job.company,
-        direction: SwipeDirection.left,
-      ),
-      profile, // ← passed to trigger queue update checks
-    );
+    if (!DemoConfig.isDemoMode) {
+      final profile = context.read<UserProfileService>().profile;
+      _recService.recordSwipe(
+        SwipeAction(
+          id: 'sw_${DateTime.now().millisecondsSinceEpoch}',
+          jobId: job.id,
+          jobTitle: job.title,
+          company: job.company,
+          direction: SwipeDirection.left,
+        ),
+        profile,
+      );
+    }
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(
@@ -190,18 +209,21 @@ class _HomeScreenState extends State<HomeScreen> {
       ));
   }
 
-  Future<void> _handleSwipeRight(Job job) async {
+  Future<void> _handleSwipeRight(Job job, [int jobIndex = 0]) async {
     final profile = context.read<UserProfileService>().profile;
-    _recService.recordSwipe(
-      SwipeAction(
-        id: 'sw_${DateTime.now().millisecondsSinceEpoch}',
-        jobId: job.id,
-        jobTitle: job.title,
-        company: job.company,
-        direction: SwipeDirection.right,
-      ),
-      profile, // ← passed to trigger queue update checks
-    );
+
+    if (!DemoConfig.isDemoMode) {
+      _recService.recordSwipe(
+        SwipeAction(
+          id: 'sw_${DateTime.now().millisecondsSinceEpoch}',
+          jobId: job.id,
+          jobTitle: job.title,
+          company: job.company,
+          direction: SwipeDirection.right,
+        ),
+        profile,
+      );
+    }
 
     // ── Step 1: Save job to Matches immediately ─────────────────────
     final appState = context.read<AppState>();
@@ -228,29 +250,58 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
     }
 
-    // ── Step 2: Generate CV in background ──────────────────────────
+    // ── Step 2: Generate CV ──────────────────────────────────────────
     try {
-      final cv = await _cvService.generateCV(job: job, profile: profile);
-      if (mounted) {
-        // Attach CV to the already-saved match
-        appState.updateCV(job.id, cv);
-        ScaffoldMessenger.of(context)
-          ..clearSnackBars()
-          ..showSnackBar(SnackBar(
-            content: Row(children: [
-              const Icon(Icons.check_circle_outline, color: Color(0xFF4CAF50), size: 18),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'CV ready for ${job.title} — view in Matches tab!',
-                  style: GoogleFonts.outfit(color: Colors.white),
+      if (DemoConfig.isDemoMode) {
+        // Demo: use MockCVService (1.5s delay + pre-built PDF)
+        final cv = await _mockCvService.generateMockCV(
+          job: job,
+          profile: profile,
+          jobIndex: jobIndex,
+        );
+        if (mounted) {
+          appState.updateCV(job.id, cv);
+          ScaffoldMessenger.of(context)
+            ..clearSnackBars()
+            ..showSnackBar(SnackBar(
+              content: Row(children: [
+                const Icon(Icons.check_circle_outline, color: Color(0xFF4CAF50), size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'CV ready for ${job.title} — view in Matches tab!',
+                    style: GoogleFonts.outfit(color: Colors.white),
+                  ),
                 ),
-              ),
-            ]),
-            backgroundColor: const Color(0xFF1B3A2B),
-            duration: const Duration(seconds: 4),
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-          ));
+              ]),
+              backgroundColor: const Color(0xFF1B3A2B),
+              duration: const Duration(seconds: 4),
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+            ));
+        }
+      } else {
+        // Live: use real CVGenerationService
+        final cv = await _cvService.generateCV(job: job, profile: profile);
+        if (mounted) {
+          appState.updateCV(job.id, cv);
+          ScaffoldMessenger.of(context)
+            ..clearSnackBars()
+            ..showSnackBar(SnackBar(
+              content: Row(children: [
+                const Icon(Icons.check_circle_outline, color: Color(0xFF4CAF50), size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'CV ready for ${job.title} — view in Matches tab!',
+                    style: GoogleFonts.outfit(color: Colors.white),
+                  ),
+                ),
+              ]),
+              backgroundColor: const Color(0xFF1B3A2B),
+              duration: const Duration(seconds: 4),
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+            ));
+        }
       }
     } catch (e) {
       // Job is already saved — CV can be generated later from the Matches tab

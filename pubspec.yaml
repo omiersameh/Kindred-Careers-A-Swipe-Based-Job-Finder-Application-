@@ -61,6 +61,7 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
+    - assets/mock_banners/
     - assets/images/banners/Technology/
     - assets/images/banners/Technology/Software Developer/
     - assets/images/banners/Technology/Mobile App Developer/
@@ -243,4 +244,6 @@ flutter:
     - assets/images/
     - assets/images/onboarding/
     - .env
+    - assets/mock_data/
+    - assets/mock_cvs/
 

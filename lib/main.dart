@@ -1,12 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app_theme.dart';
+import 'config/demo_config.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/sign_in_screen.dart';
 import 'screens/questionnaire_screen.dart';
@@ -15,23 +13,29 @@ import 'screens/home_screen.dart';
 import 'screens/matched_jobs_screen.dart';
 import 'services/user_profile_service.dart';
 import 'services/cv_generation_service.dart';
+import 'services/mock/mock_auth_service.dart';
 
+// Conditional imports: only used when NOT in demo mode
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'utils/banner_selector.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  await BannerSelector.init();
+
+  // ── Demo Mode: skip Firebase + dotenv entirely ──────────────
+  if (!DemoConfig.isDemoMode) {
+    await dotenv.load(fileName: ".env");
+    await BannerSelector.init();
+    await Firebase.initializeApp();
+  }
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
-
-  // ── Initialize Firebase ─────────────────────────────────────
-  // Uses the native google-services.json added to the android/app/ folder.
-  await Firebase.initializeApp();
 
   // ── Check first-launch flag (show onboarding once) ──────────
   final prefs = await SharedPreferences.getInstance();
@@ -54,6 +58,34 @@ class KindredCareersApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ── Demo Mode: no Firebase Analytics, use DemoAuthGate ────
+    if (DemoConfig.isDemoMode) {
+      return MaterialApp(
+        title: 'Kindred Careers (Demo)',
+        debugShowCheckedModeBanner: false,
+        theme: buildAppTheme(),
+        routes: {
+          '/main': (_) => const MainShell(),
+          '/auth': (_) => const DemoAuthGate(),
+        },
+        builder: (context, child) {
+          return Banner(
+            message: 'DEMO',
+            location: BannerLocation.topEnd,
+            color: kGold,
+            textStyle: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0D0B0A),
+            ),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
+        home: showOnboarding ? const OnboardingScreen() : const DemoAuthGate(),
+      );
+    }
+
+    // ── Live Mode: unchanged behavior ────────────────────────
     try {
       FirebaseAnalytics analytics = FirebaseAnalytics.instance;
       return MaterialApp(
@@ -86,7 +118,68 @@ class KindredCareersApp extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
+// DEMO AUTH GATE — bypasses Firebase, routes based on MockAuthService
+// ─────────────────────────────────────────────────────────────
+class DemoAuthGate extends StatelessWidget {
+  const DemoAuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // If a mock user is already signed in, go to post-auth routing
+    if (MockAuthService.isSignedIn) {
+      return const _DemoPostAuthRouter();
+    }
+    // Otherwise show the sign-in screen (which has demo member tabs)
+    return const SignInScreen();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// DEMO POST-AUTH ROUTER — checks if questionnaire is complete
+// ─────────────────────────────────────────────────────────────
+class _DemoPostAuthRouter extends StatefulWidget {
+  const _DemoPostAuthRouter();
+
+  @override
+  State<_DemoPostAuthRouter> createState() => _DemoPostAuthRouterState();
+}
+
+class _DemoPostAuthRouterState extends State<_DemoPostAuthRouter> {
+  bool _loading = true;
+  bool _questionnaireDone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    final uid = MockAuthService.currentUser?.uid ?? 'demo_guest';
+    final prefs = await SharedPreferences.getInstance();
+    final done = prefs.getBool('questionnaire_done_$uid') ?? false;
+    
+    if (mounted) {
+      await context.read<UserProfileService>().loadProfile();
+      setState(() { _questionnaireDone = done; _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        backgroundColor: kBg1,
+        body: Center(child: CircularProgressIndicator(color: kGold, strokeWidth: 3)),
+      );
+    }
+    return _questionnaireDone ? const MainShell() : const QuestionnaireScreen();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // AUTH GATE — listens to Firebase auth state and routes accordingly
+// (Only used in Live Mode)
 // ─────────────────────────────────────────────────────────────
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -118,6 +211,7 @@ class AuthGate extends StatelessWidget {
 
 // ─────────────────────────────────────────────────────────────
 // POST-AUTH ROUTER — checks if first-time user needs questionnaire
+// (Only used in Live Mode)
 // ─────────────────────────────────────────────────────────────
 class _PostAuthRouter extends StatefulWidget {
   const _PostAuthRouter();

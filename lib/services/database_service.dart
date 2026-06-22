@@ -1,16 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../config/demo_config.dart';
 import '../models/job.dart';
 import '../models/cv.dart';
 
 class DatabaseService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
-  String? get _userId => _auth.currentUser?.uid;
+  String? get _userId => DemoConfig.isDemoMode ? null : _auth.currentUser?.uid;
 
   /// Fetch all matched jobs and their CVs for the current user.
   Future<Map<String, dynamic>> loadUserMatches() async {
+    if (DemoConfig.isDemoMode) {
+      // Demo mode starts with zero matches in memory
+      return {'jobs': <Job>[], 'cvs': <String, CV>{}};
+    }
+
     final uid = _userId;
     if (uid == null) return {'jobs': <Job>[], 'cvs': <String, CV>{}};
 
@@ -45,6 +51,8 @@ class DatabaseService {
 
   /// Save or update a job match and its associated CV.
   Future<void> saveMatch(Job job, [CV? cv]) async {
+    if (DemoConfig.isDemoMode) return; // Matches are kept only in memory during demo
+
     final uid = _userId;
     if (uid == null) return;
 
@@ -66,6 +74,8 @@ class DatabaseService {
 
   /// Remove a job match.
   Future<void> deleteMatch(String jobId) async {
+    if (DemoConfig.isDemoMode) return;
+
     final uid = _userId;
     if (uid == null) return;
 

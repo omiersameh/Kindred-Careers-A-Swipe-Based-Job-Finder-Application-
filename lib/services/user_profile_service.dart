@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../config/demo_config.dart';
+import '../services/mock/mock_auth_service.dart';
 import '../models/user_profile.dart';
 
 // ============================================================
@@ -20,7 +22,10 @@ class UserProfileService extends ChangeNotifier {
 
   /// Loads the profile from local storage for the current user.
   Future<void> loadProfile() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
+    final uid = DemoConfig.isDemoMode 
+        ? (MockAuthService.currentUser?.uid ?? 'demo_guest')
+        : (FirebaseAuth.instance.currentUser?.uid ?? 'guest');
+        
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString('user_profile_$uid');
     
@@ -41,7 +46,10 @@ class UserProfileService extends ChangeNotifier {
   /// Saves the current profile to local storage.
   void _saveProfile() async {
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid ?? 'guest';
+      final uid = DemoConfig.isDemoMode 
+          ? (MockAuthService.currentUser?.uid ?? 'demo_guest')
+          : (FirebaseAuth.instance.currentUser?.uid ?? 'guest');
+          
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_profile_$uid', jsonEncode(_profile.toJson()));
     } catch (e) {
@@ -136,7 +144,9 @@ class UserProfileService extends ChangeNotifier {
   // Default profile seeded with empty/real data
   // --------------------------------------------------------
   static UserProfile _buildDefaultProfile(String id) {
-    final email = FirebaseAuth.instance.currentUser?.email ?? '';
+    final email = DemoConfig.isDemoMode
+        ? (MockAuthService.currentUser?.email ?? '')
+        : (FirebaseAuth.instance.currentUser?.email ?? '');
     
     return UserProfile(
       id: id,

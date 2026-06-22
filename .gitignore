@@ -88,12 +88,23 @@ app.*.map.json
 
 backend/.env
 /.env
+*.env*
 
 android/app/google-services.json
+**/google-services.json
+**/GoogleService-Info.plist
 android/key.properties
+key.properties
+**/*.keystore
+**/*.jks
+**/*.p12
+**/*.pfx
+**/*.pem
+**/*.key
 
 .vscode/
 backend/chroma_db/
+backend/local_storage/
 backend/__pycache__/
 *.pdf
 firebase-debug.log
@@ -102,6 +113,25 @@ backend/.venv/
 **/.venv/
 **/__pycache__/
 .agent/
+
+# User-specific and OS files
+**/local.properties
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+Thumbs.db
+desktop.ini
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Development and drafts
+drafts/
+**/.ipynb_checkpoints/
+**/.pytest_cache/
+*.zip
+*.rar
 
 # LaTeX temporary files
 *.aux

@@ -1,0 +1,41 @@
+{
+  "id": "demo_member_3",
+  "firstName": "Omar",
+  "lastName": "Tarek",
+  "email": "omar.tarek@demo.kc",
+  "phone": "01133445566",
+  "location": "Alexandria, Egypt",
+  "age": 25,
+  "educationStatus": "Bachelor's Degree",
+  "institution": "Alexandria University - Faculty of Fine Arts",
+  "degree": "Bachelor of Applied Arts",
+  "fieldOfStudy": "Film & Animation",
+  "graduationYear": "2024",
+  "careerFieldIds": ["art", "media"],
+  "specializations": {
+    "art": ["Videographer / Video Editor", "Motion Graphics Designer", "Art Director"],
+    "media": ["Film Director", "Content Creator / YouTuber"]
+  },
+  "bio": "Award-winning creative director and editor with 4+ years of experience in the Egyptian advertising and film industry. I specialize in visual storytelling, motion graphics, and brand campaign production. My work for Tarek Nour Communications reached 15M+ views across MENA.",
+  "credentials": [
+    {"title": "Adobe Certified Professional (Premiere Pro)", "issuer": "Adobe", "year": "2023"},
+    {"title": "El Gouna Film Festival — Best Short Film (Nominee)", "issuer": "GFF", "year": "2024"}
+  ],
+  "experiences": [
+    {
+      "jobTitle": "Junior Video Editor",
+      "company": "Tarek Nour Communications - Mohandeseen",
+      "startDate": "Sep 2023",
+      "endDate": "Aug 2024",
+      "description": "Edited and color-graded 20+ TV commercials for brands including Juhayna, Vodafone Egypt, and National Bank of Egypt."
+    },
+    {
+      "jobTitle": "Freelance Motion Graphics Designer",
+      "company": "BEE Agency - Maadi",
+      "startDate": "Jan 2023",
+      "endDate": "Aug 2023",
+      "description": "Created branded motion graphics and social media video content for regional FMCG and fintech clients."
+    }
+  ],
+  "skills": ["Premiere Pro", "After Effects", "DaVinci Resolve", "Creative Direction", "Cinema 4D", "Photoshop", "Storyboarding", "Color Grading"]
+}

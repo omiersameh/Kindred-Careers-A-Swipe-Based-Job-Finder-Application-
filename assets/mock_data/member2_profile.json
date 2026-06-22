@@ -1,0 +1,40 @@
+{
+  "id": "demo_member_2",
+  "firstName": "Salma",
+  "lastName": "El-Sherif",
+  "email": "salma.elsherif@demo.kc",
+  "phone": "01223344556",
+  "location": "New Cairo, Egypt",
+  "age": 23,
+  "educationStatus": "Bachelor's Degree",
+  "institution": "American University in Cairo (AUC)",
+  "degree": "Bachelor of Arts",
+  "fieldOfStudy": "Business Administration",
+  "graduationYear": "2025",
+  "careerFieldIds": ["business"],
+  "specializations": {
+    "business": ["Digital Marketing Specialist", "SEO / SEM Specialist", "Marketing Manager"]
+  },
+  "bio": "Data-driven growth marketer with a proven record of scaling user acquisition funnels for MENA-based startups. Certified in Google Analytics and HubSpot, with expertise in performance marketing, A/B testing, and agile campaign management. I turn ad spend into measurable revenue.",
+  "credentials": [
+    {"title": "Google Analytics Professional Certificate", "issuer": "Google", "year": "2024"},
+    {"title": "HubSpot Inbound Marketing Certification", "issuer": "HubSpot Academy", "year": "2023"}
+  ],
+  "experiences": [
+    {
+      "jobTitle": "Growth Marketing Intern",
+      "company": "Kijamii - Fifth Settlement",
+      "startDate": "Jul 2024",
+      "endDate": "Oct 2024",
+      "description": "Managed paid social campaigns across Meta and TikTok, achieving 35% cost-per-lead reduction for a major FMCG client."
+    },
+    {
+      "jobTitle": "SEO Content Strategist (Freelance)",
+      "company": "Self-Employed",
+      "startDate": "Mar 2023",
+      "endDate": "Jun 2024",
+      "description": "Audited and optimized SEO for 12+ Egyptian e-commerce brands, increasing organic traffic by an average of 60%."
+    }
+  ],
+  "skills": ["SEO", "Performance Marketing", "Google Ads", "Meta Ads", "Agile", "HubSpot", "Google Analytics", "A/B Testing"]
+}

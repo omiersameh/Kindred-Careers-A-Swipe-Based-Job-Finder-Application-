@@ -1,0 +1,40 @@
+{
+  "id": "demo_member_1",
+  "firstName": "Ahmed",
+  "lastName": "Mansour",
+  "email": "ahmed.mansour@demo.kc",
+  "phone": "01012344556",
+  "location": "Giza, Egypt",
+  "age": 24,
+  "educationStatus": "Bachelor's Degree",
+  "institution": "Cairo University",
+  "degree": "Bachelor of Science",
+  "fieldOfStudy": "Computer Science",
+  "graduationYear": "2025",
+  "careerFieldIds": ["technology"],
+  "specializations": {
+    "technology": ["AI & ML Engineer", "Mobile App Developer", "Full-Stack Developer"]
+  },
+  "bio": "Passionate AI engineer with hands-on experience in computer vision, NLP, and mobile development. Built production YOLOv8 models for Egyptian retail analytics and shipped Flutter apps used by thousands across MENA. I thrive at the intersection of research and product engineering.",
+  "credentials": [
+    {"title": "AWS Certified Cloud Practitioner", "issuer": "Amazon Web Services", "year": "2024"},
+    {"title": "Deep Learning Specialization", "issuer": "Coursera (Andrew Ng)", "year": "2023"}
+  ],
+  "experiences": [
+    {
+      "jobTitle": "Machine Learning Intern",
+      "company": "Vodafone Intelligent Solutions (VOIS)",
+      "startDate": "Jun 2024",
+      "endDate": "Sep 2024",
+      "description": "Developed anomaly detection pipelines for network operations using PyTorch and deployed models on AWS SageMaker."
+    },
+    {
+      "jobTitle": "Flutter Developer (Part-time)",
+      "company": "Instabug",
+      "startDate": "Jan 2024",
+      "endDate": "May 2024",
+      "description": "Contributed to the Flutter SDK, fixing performance issues and adding new widget inspection features."
+    }
+  ],
+  "skills": ["Python", "YOLOv8", "Flutter", "FastAPI", "PyTorch", "AWS", "Docker", "Git"]
+}
